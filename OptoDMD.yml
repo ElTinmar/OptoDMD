@@ -1,0 +1,8 @@
+name: OptoDMD
+channels:
+- conda-forge
+dependencies:
+- python == 3.8.16
+- pip
+- ipython
+- labjackpython
