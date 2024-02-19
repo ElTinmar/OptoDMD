@@ -1,0 +1,1 @@
+# Can I get away with arduino or lab jack ? check how fast that is 
