@@ -21,6 +21,9 @@ class DigitalAnalogIO(Protocol):
     def digitalWrite(self, val: bool) -> None:
         ...
 
+    def pwm(self, duty_cycle: float, frequency: float) -> None:
+        ...
+        
     def analogRead(self) -> float:
         ...
 
@@ -44,6 +47,25 @@ class LabJackU3:
 
     def read(self, register) -> float:
         return self.device.readRegister()
+    
+    def pwm(self, duty_cycle: float, frequency: float):
+        # duty_cycle between zero and one
+
+        timer_clock_base = 48
+        timer_clock_divisor = int( (timer_clock_base * 1e6)/(frequency * 65536) )
+
+        # set the timer clock to be 48 MHz
+        d.writeRegister(7000, timer_clock_base)
+
+        # set divisor of 15
+        d.writeRegister(7002, timer_clock_divisor)
+
+        # enable 1 timer 
+        d.writeRegister(50501, 1)
+
+        # Configure the timer for PWM
+        d.writeRegister(7100, 0)
+        d.writeRegister(7100, 65535*duty_cycle)
     
 
 class LEDDB1:
