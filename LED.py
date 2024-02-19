@@ -2,6 +2,7 @@
 # https://labjack.com/pages/support?doc=%2Fsoftware-driver%2Fdirect-modbus-tcp%2Fud-modbus-old-deprecated%2F
 
 import u3
+from typing import Protocol
 
 registers = {
     'DAC0': 5000,
@@ -11,6 +12,20 @@ registers = {
 d = u3.U3()
 d.writeRegister(registers["DAC0"], 0)
 d.writeRegister(registers["DAC0"], 3.0)
+
+class DigitalAnalogIO(Protocol):
+
+    def digitalRead(self) -> bool:
+        ...
+
+    def digitalWrite(self, val: bool) -> None:
+        ...
+
+    def analogRead(self) -> float:
+        ...
+
+    def analogWrite(self, val: float) -> None:
+        ...
 
 class LabJackU3:
 
@@ -33,11 +48,14 @@ class LabJackU3:
 
 class LEDDB1:
 
+    def __init__(self, DAIO: DigitalAnalogIO) -> None:
+        self.DAIO = DAIO
+
     def on(self):
-        pass
+        self.DAIO.digitalWrite(True)
 
     def off(self):
-        pass
+        self.DAIO.digitalWrite(False)
 
     def pwm(self, duty_cycle: float, frequency: float):
         pass
