@@ -64,8 +64,7 @@ class LabJackU3:
         d.writeRegister(50501, 1)
 
         # Configure the timer for PWM
-        d.writeRegister(7100, 0)
-        d.writeRegister(7100, 65535*duty_cycle)
+        d.writeRegister(7100, [0, 65535*duty_cycle]) # what does that do ? First 0 then duty cycle ?
     
 
 class LEDDB1:
