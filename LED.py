@@ -1,3 +1,6 @@
+# https://github.com/labjack/LabJackPython/blob/master/Examples/workingWithModbus.py
+# https://labjack.com/pages/support?doc=%2Fsoftware-driver%2Fdirect-modbus-tcp%2Fud-modbus-old-deprecated%2F
+
 import u3
 
 registers = {
@@ -13,7 +16,9 @@ class LabJackU3:
 
     registers = {
         'DAC0': 5000,
-        'DAC1': 5002
+        'DAC1': 5002,
+        'TimerClockBase': 7000,
+        'TimerClockDiviser': 7002,
     }
         
     def __init__(self) -> None:
