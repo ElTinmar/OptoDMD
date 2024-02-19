@@ -60,6 +60,9 @@ class LabJackU3:
         # set divisor of 15
         d.writeRegister(7002, timer_clock_divisor)
 
+        # Pin offset (FIO) 
+        d.writeRegister(50500, 4) # not sure about that 
+
         # enable 1 timer 
         d.writeRegister(50501, 1)
 
