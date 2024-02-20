@@ -34,38 +34,32 @@ class LEDD1B:
         self.name = name
         self.pwm_frequency = pwm_frequency
         self.pwm_channel = pwm_channel 
-        self.intensity = 0
+        self.intensity = 1
         self.started = False
 
     def set_intensity(self, intensity: float) -> None:
 
         if not (0 <= intensity <= 1):
             ValueError("intensity should be between 0 and 1")
-
-        if self.started:
-            self.DAIO.pwm_stop()
             
         self.intensity = intensity
-        self.DAIO.pwm_configure(channel=self.pwm_channel, duty_cycle=intensity, frequency=self.pwm_frequency)
-
-        if self.started:
-            self.DAIO.pwm_start()
+        self.DAIO.pwm(channel=self.pwm_channel, duty_cycle=self.intensity, frequency=self.pwm_frequency)
     
     def on(self):
         self.started = True
-        self.DAIO.pwm_start()
+        self.DAIO.pwm(channel=self.pwm_channel, duty_cycle=self.intensity, frequency=self.pwm_frequency)
 
     def off(self):
-        self.DAIO.pwm_stop()
+        self.DAIO.pwm(channel=self.pwm_channel, duty_cycle=0, frequency=self.pwm_frequency)
         self.started = False
 
     def pulse(self, duration_ms: int = 1000):
         if self.started:
             raise RuntimeError('Already ON')
 
-        self.DAIO.pwm_start()
+        self.DAIO.pwm(channel=self.pwm_channel, duty_cycle=self.intensity, frequency=self.pwm_frequency)
         time.sleep(duration_ms/1000.0)
-        self.DAIO.pwm_stop()
+        self.DAIO.pwm(channel=self.pwm_channel, duty_cycle=0, frequency=self.pwm_frequency)
 
 
 class DriverWidget(QWidget):
@@ -87,6 +81,7 @@ class DriverWidget(QWidget):
         self.intensity_slider.setRange(0, 100)
         self.intensity_slider.setValue(50)
         self.intensity_slider.valueChanged.connect(self.set_intensity)
+        self.driver.set_intensity(0.5)
 
         self.on_button = QPushButton(self)
         self.on_button.setText('ON')

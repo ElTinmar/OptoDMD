@@ -8,8 +8,6 @@
 
 # TODO National Instruments ?
 
-# TODO I have issue if I want to control >=2 leds at the same time
-
 import u3
 from pyfirmata import Arduino
 from typing import Protocol
@@ -22,13 +20,7 @@ class DigitalAnalogIO(Protocol):
     def digitalWrite(self, channel: int, val: bool):
         ...
 
-    def pwm_configure(self, channel: int, duty_cycle: float, frequency: float) -> None:
-        ...
-
-    def pwm_start(self) -> None:
-        ...
-
-    def pwm_stop(self) -> None:
+    def pwm(self, channel: int, duty_cycle: float, frequency: float) -> None:
         ...
         
     def analogRead(self, channel: int) -> float:
@@ -47,9 +39,6 @@ class myArduino:
 
     def __init__(self, board_id: str) -> None:
         self.device = Arduino(board_id)
-        self.pwm_pin = None
-        self.pwm_pin_number = -1
-        self.dc_value = 0
 
     def digitalRead(self, channel: int) -> float:
         pin = self.device.get_pin(f'd:{channel}:i')       
@@ -62,20 +51,11 @@ class myArduino:
         pin.write(val)
         self.device.taken['digital'][channel] = False
 
-    def pwm_configure(self, channel: int, duty_cycle: float, frequency: float) -> None:
-        print('frequency was ignored. Most ports use 490Hz, port 5 and 6 use 980Hz')
-        self.dc_value = duty_cycle
-        self.pwm_pin_number = channel
-
-    def pwm_start(self) -> None:
-        self.pwm_pin = self.device.get_pin(f'd:{self.pwm_pin_number}:p')
-        self.pwm_pin.write(self.dc_value)
-
-    def pwm_stop(self) -> None:
-        if self.pwm_pin is not None:
-            self.pwm_pin.write(0)
-        self.device.taken['digital'][self.pwm_pin_number] = False
-        self.pwm_pin = None
+    def pwm(self, channel: int, duty_cycle: float, frequency: float) -> None:
+        # frequency is ignored
+        pin = self.device.get_pin(f'd:{channel}:p')
+        pin.write(duty_cycle)
+        self.device.taken['digital'][channel] = False
         
     def analogRead(self, channel: int) -> float:
         pin = self.device.get_pin(f'a:{channel}:i')
@@ -148,9 +128,11 @@ class LabJackU3LV:
     CLOCK: int = 48 # I'm only using the 48MHz clock with divisors enabled 
         
     def __init__(self) -> None:
+        
         self.device = u3.U3()
-        self.timer_mode = 0
-        self.dc_value = 65535
+        
+        # enable Timer0 
+        self.device.writeRegister(self.NUM_TIMER_ENABLED, 1)
 
     def analogWrite(self, channel: int, val: float) -> None:
         self.device.writeRegister(self.channels['AnalogOutput'][channel], val)
@@ -166,9 +148,8 @@ class LabJackU3LV:
     def digitalRead(self, channel: int) -> float:
         self.device.writeRegister(self.FIO_ANALOG, 0) # set channel as digital
         return self.device.readRegister(self.channels['DigitalInputOutput'][channel])
-    
-    def pwm_configure(self, channel: int = 4, duty_cycle: float = 0.5, frequency: float = 732.42) -> None:
-        # duty_cycle: fraction of time signal is HIGH
+   
+    def pwm(self, channel: int = 4, duty_cycle: float = 0.5, frequency: float = 732.42) -> None:
 
         if not (0 <= duty_cycle <= 1):
             raise ValueError('duty_cycle should be between 0 and 1')
@@ -179,10 +160,10 @@ class LabJackU3LV:
             raise ValueError('min frequency at 48MHz is 2.861 Hz')
          
         if frequency > 732.42:
-            self.timer_mode = self.TIMER_MODE_8BIT
+            timer_mode = self.TIMER_MODE_8BIT
             div = 2**8
         else:
-            self.timer_mode = self.TIMER_MODE_16BIT
+            timer_mode = self.TIMER_MODE_16BIT
             div = 2**16
 
         # make sure digital value is 0
@@ -202,25 +183,12 @@ class LabJackU3LV:
         self.device.writeRegister(self.TIMER_PIN_OFFSET, channel) 
 
         # 16 bit value for duty cycle
-        self.dc_value = int(65535*(1-duty_cycle))
-    
-    def pwm_start(self) -> None:
-
-        # enable Timer0
-        self.device.writeRegister(self.NUM_TIMER_ENABLED, 1)
+        value = int(65535*(1-duty_cycle))
 
         # Configure the timer for 16-bit PWM
-        self.device.writeRegister(self.TIMER_CONFIG, [self.timer_mode, self.dc_value]) 
+        self.device.writeRegister(self.TIMER_CONFIG, [timer_mode, value]) 
 
-    def pwm_stop(self) -> None:
-        
-        # always low
-        self.device.writeRegister(self.TIMER_CONFIG, [self.timer_mode, 65535]) 
-
-        # disable Timer0 
-        self.device.writeRegister(self.NUM_TIMER_ENABLED, 0)
 
     def close(self) -> None:
-
         self.device.close()
 
