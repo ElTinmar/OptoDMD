@@ -3,6 +3,8 @@ from LED import LEDD1B, LEDWidget
 from PyQt5.QtWidgets import QApplication
 import sys
 
+# TODO test with LabJack
+
 #daio = LabJackU3LV()
 ardu = myArduino("/dev/ttyUSB0")
 led1 = LEDD1B(ardu, pwm_channel=11, name = 'green')
