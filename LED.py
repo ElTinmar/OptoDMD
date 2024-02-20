@@ -77,8 +77,13 @@ class myArduino:
         self.device.exit()
 
 class LabJackU3LV:
+    '''
+    Use LabJack to read and write from a single pin at a time.
+    Supports Analog input (FIOs) and output (DACs), digital
+    input and output (FIOs), as well as PWM (FIOs). 
+    '''
     
-    # Analog outputs
+    # Analog outputs (they can also do input, but I decided to ignore that)
     # 10 bit resolution
     # [0.04V, 4.95V]
     DAC0 = 5000
@@ -102,10 +107,14 @@ class LabJackU3LV:
     AIN1 = 2
     AIN2 = 4
     AIN3 = 6
-    AIN4 = 7
-    AIN5 = 8
-    AIN6 = 9
-    AIN7 = 10
+    AIN4 = 8
+    AIN5 = 10
+    AIN6 = 12
+    AIN7 = 14
+
+    # configure FIO as analog or digital
+    # bitmask: 1=Analog, 0=digital
+    FIO_ANALOG = 50590
 
     channels = {
         'AnalogInput': [AIN0,AIN1,AIN2,AIN3,AIN4,AIN5,AIN6,AIN7],
@@ -132,15 +141,19 @@ class LabJackU3LV:
         self.device.writeRegister(self.channels['AnalogOutput'][channel], val)
 
     def analogRead(self, channel: int) -> float:
+        self.device.writeRegister(self.FIO_ANALOG, channel**2) # set channel as analog
         return self.device.readRegister(self.channels['AnalogInput'][channel])
     
     def digitalWrite(self, channel: int, val: bool):
+        self.device.writeRegister(self.FIO_ANALOG, 0) # set channel as digital
         self.device.writeRegister(self.channels['DigitalInputOutput'][channel], val)
 
     def digitalRead(self, channel: int) -> float:
+        self.device.writeRegister(self.FIO_ANALOG, 0) # set channel as digital
         return self.device.readRegister(self.channels['DigitalInputOutput'][channel])
     
     def pwm_configure(self, channel: int = 4, duty_cycle: float = 0.5, frequency: float = 732.42) -> None:
+        # duty_cycle: fraction of time signal is HIGH
 
         if not (0 <= duty_cycle <= 1):
             raise ValueError('duty_cycle should be between 0 and 1')
@@ -161,17 +174,17 @@ class LabJackU3LV:
         timer_clock_divisor = int( (self.CLOCK * 1e6)/(frequency * div) )
         if timer_clock_divisor == 256: timer_clock_divisor = 0 
 
-        # set the timer clock to be 48 MHz
-        self.device.writeRegister(self.TIMER_CLOCK_BASE, self.CLOCK)
+        # set the timer clock to be 48 MHz (CLOCK_BASE: 6)
+        self.device.writeRegister(self.TIMER_CLOCK_BASE, 6)
 
-        # set divisor of 15
+        # set divisor
         self.device.writeRegister(self.TIMER_CLOCK_DIVISOR, timer_clock_divisor)
 
         # Pin offset (FIO) 
         self.device.writeRegister(self.TIMER_PIN_OFFSET, channel) 
 
         # 16 bit value for duty cycle
-        self.dc_value = int(65535*duty_cycle)
+        self.dc_value = int(65535*(1-duty_cycle))
     
     def pwm_start(self) -> None:
 
@@ -182,6 +195,9 @@ class LabJackU3LV:
         self.device.writeRegister(self.TIMER_CONFIG, [self.timer_mode, self.dc_value]) 
 
     def pwm_stop(self) -> None:
+        
+        # always low
+        self.device.writeRegister(self.TIMER_CONFIG, [self.timer_mode, 65535]) 
 
         # disable Timer0 
         self.device.writeRegister(self.NUM_TIMER_ENABLED, 0)
