@@ -44,34 +44,44 @@ class myArduino:
     def __init__(self, board_id: str) -> None:
         self.device = Arduino(board_id)
         self.pwm_pin = None
+        self.pwm_pin_number = -1
         self.dc_value = 0
 
     def digitalRead(self, channel: int) -> float:
-        pin = self.device.get_pin(f'd:{channel}:i')
-        return pin.read()
+        pin = self.device.get_pin(f'd:{channel}:i')       
+        val = pin.read()  
+        self.device.taken['digital'][channel] = False
+        return val
 
     def digitalWrite(self, channel: int, val: bool):
         pin = self.device.get_pin(f'd:{channel}:o')
         pin.write(val)
+        self.device.taken['digital'][channel] = False
 
     def pwm_configure(self, channel: int, duty_cycle: float, frequency: float) -> None:
-        Warning('PWM frequency was ignored')
+        print('frequency was ignored. Most ports use 490Hz, port 5 and 6 use 980Hz')
         self.dc_value = duty_cycle
         self.pwm_pin = self.device.get_pin(f'd:{channel}:p')
+        self.pwm_pin_number = channel
 
     def pwm_start(self) -> None:
         self.pwm_pin.write(self.dc_value)
 
     def pwm_stop(self) -> None:
         self.pwm_pin.write(0)
+        self.device.taken['digital'][self.pwm_pin_number] = False
+        self.pwm_pin = None
+        self.pwm_pin_number = -1
         
     def analogRead(self, channel: int) -> float:
         pin = self.device.get_pin(f'a:{channel}:i')
-        return pin.read()
+        val = pin.read()
+        self.device.taken['analog'][channel] = False
+        return val
 
     def analogWrite(self, channel: int, val: float) -> None:
-        pin = self.device.get_pin(f'a:{channel}:o')
-        pin.write(val)
+        # Can not do analog write, the arduino does not have a DAC
+        pass
 
     def close(self) -> None:
         self.device.exit()
