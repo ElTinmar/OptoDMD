@@ -130,7 +130,7 @@ class LabJackU3LV:
     TIMER_MODE_16BIT = 0
     TIMER_MODE_8BIT = 1
 
-    CLOCK: int = 48 # I'm only using the 48MHz clock
+    CLOCK: int = 48 # I'm only using the 48MHz clock with divisors enabled 
         
     def __init__(self) -> None:
         self.device = u3.U3()
@@ -174,7 +174,7 @@ class LabJackU3LV:
         timer_clock_divisor = int( (self.CLOCK * 1e6)/(frequency * div) )
         if timer_clock_divisor == 256: timer_clock_divisor = 0 
 
-        # set the timer clock to be 48 MHz (CLOCK_BASE: 6)
+        # set the timer clock to 48 MHz with divisor (correspond to register value of 6)
         self.device.writeRegister(self.TIMER_CLOCK_BASE, 6)
 
         # set divisor

@@ -10,6 +10,12 @@ cd exodriver/
 sudo ./install.sh   
 ```
 
+# install Arduino IDE
+
+```
+sudo apt install arduino
+```
+
 # Load Firmata Sketch on the Arduino
 
 The sketch is available in the Arduino IDE’s built-in examples. To open it, access the File menu, then Examples, followed by Firmata, and finally StandardFirmata.
