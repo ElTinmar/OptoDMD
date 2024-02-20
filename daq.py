@@ -8,6 +8,8 @@
 
 # TODO National Instruments ?
 
+# TODO I have issue if I want to control >=2 leds at the same time
+
 import u3
 from pyfirmata import Arduino
 from typing import Protocol
@@ -63,10 +65,10 @@ class myArduino:
     def pwm_configure(self, channel: int, duty_cycle: float, frequency: float) -> None:
         print('frequency was ignored. Most ports use 490Hz, port 5 and 6 use 980Hz')
         self.dc_value = duty_cycle
-        self.pwm_pin = self.device.get_pin(f'd:{channel}:p')
         self.pwm_pin_number = channel
 
     def pwm_start(self) -> None:
+        self.pwm_pin = self.device.get_pin(f'd:{self.pwm_pin_number}:p')
         self.pwm_pin.write(self.dc_value)
 
     def pwm_stop(self) -> None:
@@ -74,7 +76,6 @@ class myArduino:
             self.pwm_pin.write(0)
         self.device.taken['digital'][self.pwm_pin_number] = False
         self.pwm_pin = None
-        self.pwm_pin_number = -1
         
     def analogRead(self, channel: int) -> float:
         pin = self.device.get_pin(f'a:{channel}:i')

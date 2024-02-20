@@ -26,10 +26,12 @@ class LEDD1B:
             self, 
             DAIO: DigitalAnalogIO, 
             pwm_frequency: float = 1000, 
-            pwm_channel: int = 5
+            pwm_channel: int = 5,
+            name: str = 'LED'
         ) -> None:
 
         self.DAIO = DAIO
+        self.name = name
         self.pwm_frequency = pwm_frequency
         self.pwm_channel = pwm_channel 
         self.intensity = 0
@@ -77,6 +79,9 @@ class DriverWidget(QWidget):
 
     def declare_components(self):
 
+        self.name_label = QLabel(self)
+        self.name_label.setText(self.driver.name)
+
         self.intensity_slider = LabeledSliderSpinBox(self)
         self.intensity_slider.setText('intensity (%)')
         self.intensity_slider.setRange(0, 100)
@@ -104,6 +109,7 @@ class DriverWidget(QWidget):
          
         main_layout = QHBoxLayout(self)
         main_layout.addStretch()
+        main_layout.addWidget(self.name_label)
         main_layout.addWidget(self.intensity_slider)
         main_layout.addWidget(self.on_button)
         main_layout.addWidget(self.off_button)

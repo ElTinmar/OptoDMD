@@ -5,8 +5,8 @@ import sys
 
 #daio = LabJackU3LV()
 ardu = myArduino("/dev/ttyUSB0")
-led1 = LEDD1B(ardu, pwm_channel=11)
-led2 = LEDD1B(ardu, pwm_channel=5)
+led1 = LEDD1B(ardu, pwm_channel=11, name = 'green')
+led2 = LEDD1B(ardu, pwm_channel=5, name = 'red')
 
 '''
 led1.set_intensity(0.5)
