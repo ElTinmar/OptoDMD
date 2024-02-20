@@ -9,6 +9,7 @@
 import u3
 from pyfirmata import Arduino
 from typing import Protocol
+import time      
 
 class DigitalAnalogIO(Protocol):
 
@@ -81,7 +82,8 @@ class myArduino:
 
     def analogWrite(self, channel: int, val: float) -> None:
         # Can not do analog write, the arduino does not have a DAC
-        pass
+        print("""The arduino does not have a DAC, no analog writing. 
+              Consider hooking a capacitor on a PWM output instead""")
 
     def close(self) -> None:
         self.device.exit()
@@ -179,6 +181,9 @@ class LabJackU3LV:
         else:
             self.timer_mode = self.TIMER_MODE_16BIT
             div = 2**16
+
+        # make sure digital value is 0
+        self.digitalWrite(channel,0)
     
         # divisor should be in the range 0-255, 0 corresponds to a divisor of 256
         timer_clock_divisor = int( (self.CLOCK * 1e6)/(frequency * div) )
@@ -215,3 +220,49 @@ class LabJackU3LV:
     def close(self) -> None:
 
         self.device.close()
+
+class LEDD1B:
+    '''Control a Thorlabs LED driver for optogenetics stimulation using PWM'''
+
+    def __init__(
+            self, 
+            DAIO: DigitalAnalogIO, 
+            pwm_frequency: float = 1000, 
+            pwm_channel: int = 5
+        ) -> None:
+
+        self.DAIO = DAIO
+        self.pwm_frequency = pwm_frequency
+        self.pwm_channel = pwm_channel 
+        self.intensity = 0
+        self.started = False
+
+    def set_intensity(self, intensity: float) -> None:
+
+        if not (0 <= intensity <= 1):
+            ValueError("intensity should be between 0 and 1")
+
+        if self.started:
+            self.DAIO.pwm_stop()
+            
+        self.intensity = intensity
+        self.DAIO.pwm_configure(channel=self.pwm_channel, duty_cycle=intensity, frequency=self.pwm_frequency)
+
+        if self.started:
+            self.DAIO.pwm_start()
+    
+    def on(self):
+        self.started = True
+        self.DAIO.pwm_start()
+
+    def off(self):
+        self.DAIO.pwm_stop()
+        self.started = False
+
+    def pulse(self, duration_ms: int = 1000):
+        if self.started:
+            raise RuntimeError('Already ON')
+
+        self.DAIO.pwm_start()
+        time.sleep(duration_ms/1000.0)
+        self.DAIO.pwm_stop()
