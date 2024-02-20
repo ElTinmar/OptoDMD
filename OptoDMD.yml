@@ -7,3 +7,7 @@ dependencies:
 - ipython
 - labjackpython
 - pyfirmata
+- pyzmq
+- pyqt
+- pip:
+  - git+https://github.com/ElTinmar/qt_widgets.git@main
