@@ -70,7 +70,8 @@ class myArduino:
         self.pwm_pin.write(self.dc_value)
 
     def pwm_stop(self) -> None:
-        self.pwm_pin.write(0)
+        if self.pwm_pin is not None:
+            self.pwm_pin.write(0)
         self.device.taken['digital'][self.pwm_pin_number] = False
         self.pwm_pin = None
         self.pwm_pin_number = -1
