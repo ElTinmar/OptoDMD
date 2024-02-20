@@ -12,9 +12,7 @@ sudo ./install.sh
 
 # install Arduino IDE
 
-```
-sudo apt install arduino
-```
+Install AppImage from arduino's website (Ubuntu package is outdated)
 
 # Load Firmata Sketch on the Arduino
 
