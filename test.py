@@ -7,8 +7,9 @@ import sys
 
 daio = LabJackU3LV()
 #ardu = myArduino("/dev/ttyUSB0")
-led1 = LEDD1B(daio, pwm_channel=4, name = 'red')
-led2 = LEDD1B(daio, pwm_channel=6, name = 'yellow')
+led0 = LEDD1B(daio, pwm_channel=4, name = 'red')
+led1 = LEDD1B(daio, pwm_channel=6, name = 'yellow')
+
 
 '''
 led1.set_intensity(0.5)
@@ -19,7 +20,7 @@ led1.pulse(duration_ms=1000)
 '''
 
 app = QApplication(sys.argv)
-window = LEDWidget(led_drivers=[led1, led2])
+window = LEDWidget(led_drivers=[led0, led1])
 window.show()
 app.exec()
 daio.close()
