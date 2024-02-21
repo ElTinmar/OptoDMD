@@ -20,3 +20,13 @@ The sketch is available in the Arduino IDE’s built-in examples. To open it, ac
 1. Plug the USB cable into the PC.  
 2. Select the appropriate board and port on the IDE.  
 3. Press Upload.  
+
+# Install Ximea
+
+```
+wget https://www.ximea.com/downloads/recent/XIMEA_Linux_SP.tgz
+tar xzf XIMEA_Linux_SP.tgz
+cd package
+./install -pcie
+cp -r api/Python/v3/ximea ~/miniconda3/envs/OptoDMD/lib/python3.8/site-packages/
+```
