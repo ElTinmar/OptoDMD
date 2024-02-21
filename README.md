@@ -41,4 +41,4 @@ cd jeromq
 JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64/ mvn clean install -DskipTests
 ```
 
-Then copy target/jeromq-0.6.0.jar to the project root  
+Then copy target/jeromq-0.6.0.jar to the project root.
