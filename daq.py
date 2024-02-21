@@ -76,8 +76,13 @@ class LabJackU3LV:
     Use LabJack to read and write from a single pin at a time.
     Supports Analog input (FIOs) and output (DACs), digital
     input and output (FIOs), as well as PWM (FIOs). 
+
+    The U3 has 2 timers (Timer0-Timer1) and 2 counters (Counter0-Counter1). 
+    When any of these timers or counters are enabled, they take over an
+    FIO/EIO line in sequence (Timer0, Timer1, Counter0, then Counter1), 
+    starting with FIO0+TimerCounterPinOffset. 
     '''
-    
+  
     # Analog outputs (they can also do input, but I decided to ignore that)
     # 10 bit resolution
     # [0.04V, 4.95V]
@@ -130,22 +135,23 @@ class LabJackU3LV:
     def __init__(self) -> None:
         
         self.device = u3.U3()
-        
-        # enable Timer0 
-        self.device.writeRegister(self.NUM_TIMER_ENABLED, 1)
 
     def analogWrite(self, channel: int, val: float) -> None:
+        self.device.writeRegister(self.NUM_TIMER_ENABLED, 0)
         self.device.writeRegister(self.channels['AnalogOutput'][channel], val)
 
     def analogRead(self, channel: int) -> float:
+        self.device.writeRegister(self.NUM_TIMER_ENABLED, 0)
         self.device.writeRegister(self.FIO_ANALOG, channel**2) # set channel as analog
         return self.device.readRegister(self.channels['AnalogInput'][channel])
     
     def digitalWrite(self, channel: int, val: bool):
+        self.device.writeRegister(self.NUM_TIMER_ENABLED, 0)
         self.device.writeRegister(self.FIO_ANALOG, 0) # set channel as digital
         self.device.writeRegister(self.channels['DigitalInputOutput'][channel], val)
 
     def digitalRead(self, channel: int) -> float:
+        self.device.writeRegister(self.NUM_TIMER_ENABLED, 0)
         self.device.writeRegister(self.FIO_ANALOG, 0) # set channel as digital
         return self.device.readRegister(self.channels['DigitalInputOutput'][channel])
    
@@ -168,10 +174,18 @@ class LabJackU3LV:
 
         # make sure digital value is 0
         self.digitalWrite(channel,0)
-    
+
+        if duty_cycle == 0:
+            # PWM can't fully turn off. Use digital write instead
+            # and return
+            return
+        
         # divisor should be in the range 0-255, 0 corresponds to a divisor of 256
         timer_clock_divisor = int( (self.CLOCK * 1e6)/(frequency * div) )
         if timer_clock_divisor == 256: timer_clock_divisor = 0 
+        
+        # enable Timer0 
+        self.device.writeRegister(self.NUM_TIMER_ENABLED, 1)
 
         # set the timer clock to 48 MHz with divisor (correspond to register value of 6)
         self.device.writeRegister(self.TIMER_CLOCK_BASE, 6)
@@ -188,7 +202,5 @@ class LabJackU3LV:
         # Configure the timer for 16-bit PWM
         self.device.writeRegister(self.TIMER_CONFIG, [timer_mode, value]) 
 
-
     def close(self) -> None:
         self.device.close()
-

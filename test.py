@@ -5,10 +5,10 @@ import sys
 
 # TODO test with LabJack
 
-#daio = LabJackU3LV()
-ardu = myArduino("/dev/ttyUSB0")
-led1 = LEDD1B(ardu, pwm_channel=11, name = 'green')
-led2 = LEDD1B(ardu, pwm_channel=5, name = 'red')
+daio = LabJackU3LV()
+#ardu = myArduino("/dev/ttyUSB0")
+led1 = LEDD1B(daio, pwm_channel=4, name = 'red')
+led2 = LEDD1B(daio, pwm_channel=6, name = 'yellow')
 
 '''
 led1.set_intensity(0.5)
@@ -21,4 +21,5 @@ led1.pulse(duration_ms=1000)
 app = QApplication(sys.argv)
 window = LEDWidget(led_drivers=[led1, led2])
 window.show()
-sys.exit(app.exec())
+app.exec()
+daio.close()
