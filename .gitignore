@@ -1,4 +1,5 @@
 toy_data/
+*.jar
 
 # logs
 *.log
