@@ -27,7 +27,6 @@ classdef frameDoneIPC < handle
             % Add a listener to the the notifier that fires when a frame is acquired. 
             % This is the same notifier used for user functions.
             obj.listeners{1} = addlistener(obj.hSI.hUserFunctions ,'frameAcquired', @obj.fAcq);
-            % obj.listeners{n}  % More listeners can be added here. 
 
             % initalize zeromq for IPC: send images to other processes
             javaclasspath(zeromq_jar_path)
