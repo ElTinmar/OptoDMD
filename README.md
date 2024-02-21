@@ -30,3 +30,15 @@ cd package
 ./install -pcie
 cp -r api/Python/v3/ximea ~/miniconda3/envs/OptoDMD/lib/python3.8/site-packages/
 ```
+
+# Use zeromq with matlab
+
+```
+sudo apt install maven openjdk-8-jdk-headless
+git clone https://github.com/zeromq/jeromq.git
+git checkout tags/v0.6.0
+cd jeromq
+JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64/ mvn clean install -DskipTests
+```
+
+Then copy target/jeromq-0.6.0.jar to the project root  
