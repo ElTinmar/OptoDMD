@@ -11,3 +11,4 @@ dependencies:
 - pyqt
 - pip:
   - git+https://github.com/ElTinmar/qt_widgets.git@main
+  - git+https://github.com/ElTinmar/camera_tools.git@main
