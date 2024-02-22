@@ -20,9 +20,6 @@ def deserialize(message: str) -> NDArray:
     data = [r.split(',') for r in message.split(';')]
     return np.array(data, dtype = np.float32)
 
-# TODO maybe I need something else to loop over message and send signal (image)
-# when one message arrives (maybe a QRunnable)
-
 class ImageReceiver(QRunnable):
 
     image_ready = pyqtSignal(np.ndarray)
