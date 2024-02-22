@@ -6,6 +6,7 @@ classdef frameDoneIPC < handle
         context
         publisher
         channel
+        flags
     end 
 
 
@@ -34,7 +35,8 @@ classdef frameDoneIPC < handle
             obj.context = ZContext();
             obj.publisher = obj.context.createSocket(SocketType.PUSH);
             obj.publisher.bind(zeromq_address);
-
+            
+            obj.flags = ZMQ.DONTWAIT;
             obj.channel = channel;
 
         end 
@@ -60,7 +62,7 @@ classdef frameDoneIPC < handle
             frame = (single(frame) - single(im_min))./(single(im_max)-single(im_min));
 
             % send image via ZMQ 
-            obj.publisher.send(serialize(frame'), ZMQ.DONTWAIT); 
+            obj.publisher.send(serialize(frame'), obj.flags); 
 
         end 
 
