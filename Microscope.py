@@ -10,7 +10,7 @@
 import zmq
 import numpy as np
 from numpy.typing import NDArray
-from PyQt5.QtCore import QTimer
+from PyQt5.QtCore import QTimer, pyqtSignal, pyqtSlot, QRunnable, QThreadPool
 from PyQt5.QtWidgets import QLabel,  QWidget
 from qt_widgets import NDarray_to_QPixmap
 
@@ -20,33 +20,40 @@ def deserialize(message: str) -> NDArray:
     data = [r.split(',') for r in message.split(';')]
     return np.array(data, dtype = np.float32)
 
+# TODO maybe I need something else to loop over message and send signal (image)
+# when one message arrives (maybe a QRunnable)
 
-class TwoPhoton(QWidget):
+class ImageReceiver(QRunnable):
 
-    def __init__(self, zmq_adress: str, *args, **kwargs):
+    image_ready = pyqtSignal(np.ndarray)
 
-        super().__init__(*args, **kwargs)
+    def __init__(self, zmq_adress):
 
         self.context = zmq.Context()
         self.socket = self.context.socket(zmq.PULL)
         self.socket.connect(zmq_adress)
 
+    def run(self):
+
+        message = self.socket.recv()
+        image = deserialize(message.decode())
+        image = (255*image).astype(np.uint8)
+        self.image_ready.emit(image)
+
+class TwoPhoton(QWidget):
+
+    def __init__(self, receiver: ImageReceiver, *args, **kwargs):
+
+        super().__init__(*args, **kwargs)
+
+        self.thread_pool = QThreadPool()
+        receiver.image_ready.connect(self.display)
+        self.pool.start(receiver)
+
         self.twop_image = QLabel(self)
         self.twop_image.setFixedWidth(512)
         self.twop_image.setFixedHeight(512)
 
-        # TODO using a QTimer may be a bad idea. What should I do instead ? 
-        self.timer = QTimer()
-        self.timer.timeout.connect(self.loop)
-        self.timer.setInterval(33)
-        self.timer.start()
-
-    def loop(self):
-        try:
-            message = self.socket.recv(flags=zmq.NOBLOCK)
-            image = deserialize(message.decode())
-            image = (255*image).astype(np.uint8)
-            self.twop_image.setPixmap(NDarray_to_QPixmap(image))
-            self.update()
-        except zmq.Again:
-            pass
+    def display(self, image: NDArray):
+        self.twop_image.setPixmap(NDarray_to_QPixmap(image))
+        self.update()
