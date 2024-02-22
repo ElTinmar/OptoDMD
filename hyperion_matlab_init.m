@@ -16,4 +16,4 @@ cd(optoDMD_folder)
 
 % run scanimage
 scanimage
-ipc = frameDoneIPC(zeromq_jar_path, zeromq_address, channel)
+ipc = frameDoneIPC(zeromq_jar_path, zeromq_address, channel);

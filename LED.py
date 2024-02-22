@@ -1,8 +1,7 @@
 from daq import DigitalAnalogIO
 import time
-from PyQt5.QtCore import QTimer, Qt
-from PyQt5.QtWidgets import QSpinBox, QSlider, QListWidgetItem, QListWidget, QFileDialog, QPushButton, QLabel, QVBoxLayout, QHBoxLayout, QWidget
-from qt_widgets import NDarray_to_QPixmap,  LabeledSliderSpinBox, LabeledSpinBox
+from PyQt5.QtWidgets import QPushButton, QLabel, QVBoxLayout, QHBoxLayout, QWidget
+from qt_widgets import LabeledSliderSpinBox, LabeledSpinBox
 from typing import Protocol, List
 
 class LEDDriver(Protocol):
