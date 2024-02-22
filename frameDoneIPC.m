@@ -60,7 +60,7 @@ classdef frameDoneIPC < handle
             frame = (single(frame) - single(im_min))./(single(im_max)-single(im_min));
 
             % send image via ZMQ
-            obj.publisher.send(mat2str(frame'), 0);
+            obj.publisher.send(serialize(frame'), 0); 
 
         end 
 

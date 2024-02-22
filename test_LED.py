@@ -1,5 +1,6 @@
 from daq import LabJackU3LV, myArduino
 from LED import LEDD1B, LEDWidget
+from Microscope import TwoPhoton
 from PyQt5.QtWidgets import QApplication
 import sys
 
