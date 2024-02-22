@@ -10,7 +10,7 @@
 import zmq
 import numpy as np
 from numpy.typing import NDArray
-from PyQt5.QtCore import QTimer, pyqtSignal, pyqtSlot, QRunnable, QThreadPool
+from PyQt5.QtCore import QTimer, pyqtSignal, pyqtSlot, QRunnable, QThreadPool, QObject
 from PyQt5.QtWidgets import QLabel,  QWidget
 from qt_widgets import NDarray_to_QPixmap
 
@@ -20,22 +20,27 @@ def deserialize(message: str) -> NDArray:
     data = [r.split(',') for r in message.split(';')]
     return np.array(data, dtype = np.float32)
 
-class ImageReceiver(QRunnable):
-
+class Emitter(QObject):
     image_ready = pyqtSignal(np.ndarray)
 
-    def __init__(self, zmq_adress):
+class ImageReceiver(QRunnable):
 
+    def __init__(self, zmq_adress, *args, **kwargs):
+
+        super().__init__(*args, **kwargs)
+        
         self.context = zmq.Context()
         self.socket = self.context.socket(zmq.PULL)
         self.socket.connect(zmq_adress)
+        self.emitter = Emitter()
 
     def run(self):
-
-        message = self.socket.recv()
-        image = deserialize(message.decode())
-        image = (255*image).astype(np.uint8)
-        self.image_ready.emit(image)
+        # maybe find something more interruptible
+        while True:
+            message = self.socket.recv()
+            image = deserialize(message.decode())
+            image = (255*image).astype(np.uint8)
+            self.emitter.image_ready.emit(image)
 
 class TwoPhoton(QWidget):
 
@@ -43,9 +48,9 @@ class TwoPhoton(QWidget):
 
         super().__init__(*args, **kwargs)
 
+        receiver.emitter.image_ready.connect(self.display)
         self.thread_pool = QThreadPool()
-        receiver.image_ready.connect(self.display)
-        self.pool.start(receiver)
+        self.thread_pool.start(receiver)
 
         self.twop_image = QLabel(self)
         self.twop_image.setFixedWidth(512)
