@@ -1,120 +1,42 @@
-# We are using the DLP Lightcrafter 4500
-# which does not support uploading patterns to onboard flash on the fly
-# instead, you can upload a new firmware with images via USB 1.0
-# which isn't great.
-# Since I don't need to switch between patterns super fast, I will
-# just use the Lightcrafter's video input to display patterns.
- 
-# Open a borderless window on the DMD and use video display
-  
-# use pyqt signals to send images to PyQT widget fullscreen on the DMD ?
+from PyQt5.QtWidgets import QWidget, QLabel, QApplication
+from PyQt5.QtCore import Qt, pyqtSlot
+from PyQt5.QtGui import QColor, QPixmap
+from numpy.typing import NDArray
+from qt_widgets import NDarray_to_QPixmap
 
-# Reference : https://stackoverflow.com/a/59539843
+class DMD(QWidget):
 
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
-from PyQt5.QtWidgets import *
-from PyQt5.QtCore import QObject, pyqtSignal
-import sys
-import time
-import threading
+    def __init__ (self, screen_num: int = 0, *args, **kwargs):
 
-# TODO in my case, something else (ROI drawing tool) will be sending the signal
+        super().__init__(*args, **kwargs)
+        self.screen_num = screen_num
+        self.configure_screen()
+        self.create_components()
 
-class myImageDisplayApp (QObject):
-
-    # Define the custom signal
-    # https://www.riverbankcomputing.com/static/Docs/PyQt5/signals_slots.html#the-pyqtslot-decorator
-    signal_update_image = pyqtSignal(str)
-
-    def __init__ (self):
-
-        super().__init__()
-
-        # Setup the seperate thread 
-        # https://stackoverflow.com/a/37694109/4988010
-        self.thread = threading.Thread(target=self.run_img_widget_in_background) 
-        self.thread.daemon = True
-        self.thread.start()
-
-    def run_img_widget_in_background(self):
-        self.app = QApplication(sys.argv)
-        self.my_bg_qt_app = qtAppWidget(main_thread_object=self)
-        self.app.exec_()
-
-    def emit_image_update(self, pattern_file=None):
-        print('emit_image_update signal')
-        self.signal_update_image.emit(pattern_file)
-
-
-class qtAppWidget(QLabel):
-
-    def __init__ (self, main_thread_object):
-
-        super().__init__()
-
-        # Connect the singal to slot
-        main_thread_object.signal_update_image.connect(self.updateImage)
-
-        self.setupGUI()
-
-    def setupGUI(self):
-
+    def configure_screen(self):
+        
         self.app = QApplication.instance()
-
-        # Get avaliable screens/monitors
-        # https://doc.qt.io/qt-5/qscreen.html
-        # Get info on selected screen 
-        self.selected_screen = 1            # Select the desired monitor/screen
-
         self.screens_available = self.app.screens()
-        self.screen = self.screens_available[self.selected_screen]
+        self.screen = self.screens_available[self.screen_num]
         self.screen_width = self.screen.size().width()
         self.screen_height = self.screen.size().height()
-
-        # Create a black image for init 
-        self.pixmap = QPixmap(self.screen_width, self.screen_height)
-        self.pixmap.fill(QColor('black'))
-
-        # Create QLabel object
-        self.img_widget = QLabel()
-
-        # Varioius flags that can be applied to make displayed window frameless, fullscreen, etc...
-        # https://doc.qt.io/qt-5/qt.html#WindowType-enum
-        # https://doc.qt.io/qt-5/qt.html#WidgetAttribute-enum
-        self.img_widget.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowDoesNotAcceptFocus | Qt.WindowStaysOnTopHint)
         
-        # Hide mouse cursor 
-        self.img_widget.setCursor(Qt.BlankCursor)       
-
-        self.img_widget.setStyleSheet("background-color: black;") 
-
-        self.img_widget.setGeometry(0, 0, self.screen_width, self.screen_height)            # Set the size of Qlabel to size of the screen
-        self.img_widget.setWindowTitle('myImageDisplayApp')
-        self.img_widget.setAlignment(Qt.AlignCenter | Qt.AlignTop) #https://doc.qt.io/qt-5/qt.html#AlignmentFlag-enum                         
-        self.img_widget.setPixmap(self.pixmap)
-        self.img_widget.show()
-
-        # Set the screen on which widget is on
-        self.img_widget.windowHandle().setScreen(self.screen)
-        # Make full screen 
-        self.img_widget.showFullScreen()
+        self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowDoesNotAcceptFocus | Qt.WindowStaysOnTopHint)
+        self.setCursor(Qt.BlankCursor)
+        self.showFullScreen()
+        self.move(self.screen.geometry().topLeft())
         
+    def create_components(self):
 
-    def updateImage(self, pattern_file=None):
-        print('Pattern file given: ', pattern_file)
-        self.img_widget.clear()                     # Clear all existing content of the QLabel
-        
-        self.pixmap.fill(QColor('green'))
-        pixmap = QPixmap(pattern_file).scaled(self.screen_width,self.screen_height, Qt.KeepAspectRatio)         # Update pixmap with desired image
-        self.pixmap = pixmap
+        pixmap = QPixmap(self.screen_width, self.screen_height)
+        pixmap.fill(QColor('black'))
 
-        self.img_widget.setPixmap(self.pixmap)      # Show desired image on Qlabel
+        self.img_label = QLabel(self)
+        self.img_label.setPixmap(pixmap)
+        self.img_label.setGeometry(0, 0, self.screen_width, self.screen_height)           
+        self.img_label.setAlignment(Qt.AlignCenter | Qt.AlignTop)          
+        self.img_label.show()
 
-if __name__ == "__main__":
-
-    myapp = myImageDisplayApp()
-
-    print('Update the displayed image in the QT app running in background')
-    myapp.emit_image_update('img_0005.png')
-    time.sleep(2)
+    @pyqtSlot()
+    def update_image(self, image: NDArray=None):
+        self.img_label.setPixmap(NDarray_to_QPixmap(image))     
