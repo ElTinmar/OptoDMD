@@ -14,12 +14,12 @@ from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import QLabel,  QWidget
 from qt_widgets import NDarray_to_QPixmap
 
-def matstr_to_array(matstr: str) -> NDArray:
+def deserialize(message: str) -> NDArray:
     '''parse the output of matlab mat2str function'''
-    rows = matstr[1:-1].split(';')
+    rows = message.split(';')
     data = []
     for r in rows:
-        data.append(r.split(' '))
+        data.append(r.split(','))
     array = np.array(data, dtype = np.float32)
     return array
 
@@ -47,7 +47,7 @@ class TwoPhoton(QWidget):
     def loop(self):
         try:
             message = self.socket.recv(flags=zmq.NOBLOCK)
-            image = matstr_to_array(message.decode())
+            image = deserialize(message.decode())
             image = (255*image).astype(np.uint8)
             self.twop_image.setPixmap(NDarray_to_QPixmap(image))
             self.update()

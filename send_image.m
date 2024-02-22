@@ -6,7 +6,7 @@ import org.zeromq.*
 N_random = 10;
 fake_image = {};
 for i = 1:10
-    fake_image{i} = mat2str(rand([512,512]), 3);
+    fake_image{i} = rand([512,512]);
 end
 
 context = ZContext();
@@ -15,5 +15,5 @@ publisher.bind('tcp://*:5560');
 
 for n = 1:100
     idx = mod(n,N_random) + 1;
-    publisher.send(fake_image{idx}, 0);
+    publisher.send(serialize(fake_image{idx}), 0);
 end
