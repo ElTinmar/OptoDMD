@@ -32,7 +32,7 @@ classdef frameDoneIPC < handle
             javaclasspath(zeromq_jar_path)
             import org.zeromq.*
             obj.context = ZContext();
-            obj.publisher = context.createSocket(SocketType.PUSH);
+            obj.publisher = obj.context.createSocket(SocketType.PUSH);
             obj.publisher.bind(zeromq_address);
 
             obj.channel = channel;
@@ -59,8 +59,8 @@ classdef frameDoneIPC < handle
             im_max = obj.hSI.hChannels.channelLUT{obj.channel}(2);
             frame = (single(frame) - single(im_min))./(single(im_max)-single(im_min));
 
-            % send image via ZMQ
-            obj.publisher.send(serialize(frame'), 0); 
+            % send image via ZMQ 
+            obj.publisher.send(serialize(frame'), ZMQ.DONTWAIT); 
 
         end 
 
