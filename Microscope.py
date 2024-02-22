@@ -15,13 +15,10 @@ from PyQt5.QtWidgets import QLabel,  QWidget
 from qt_widgets import NDarray_to_QPixmap
 
 def deserialize(message: str) -> NDArray:
-    '''parse the output of matlab mat2str function'''
-    rows = message.split(';')
-    data = []
-    for r in rows:
-        data.append(r.split(','))
-    array = np.array(data, dtype = np.float32)
-    return array
+    '''deserialize string into numpy array'''
+
+    data = [r.split(',') for r in message.split(';')]
+    return np.array(data, dtype = np.float32)
 
 
 class TwoPhoton(QWidget):
