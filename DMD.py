@@ -19,6 +19,8 @@ import sys
 import time
 import threading
 
+# TODO in my case, something else (ROI drawing tool) will be sending the signal
+
 class myImageDisplayApp (QObject):
 
     # Define the custom signal
