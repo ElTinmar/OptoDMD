@@ -25,7 +25,6 @@ class OptoDMD():
         self.led = led
         self.dmd = dmd
     
-
 if __name__ == "__main__":
 
     o1_263 = "192.168.236.75"
@@ -33,17 +32,24 @@ if __name__ == "__main__":
     ZMQ_ADDRESS= "tcp://" + o1_263 + ":" + PORT
     SCREEN_DMD = 1
 
+    # Communication with ScanImage
     receiver = ImageReceiver(ZMQ_ADDRESS)
+    two_photon_widget = TwoPhoton(receiver)
+
+    # Camera 
     cam = XimeaCamera()
+    camera_widget = CameraWidget(cam)
+
+    # Control LEDs
     daio = LabJackU3LV()
     #daio = myArduino("/dev/ttyUSB0")
-    led = LEDD1B(daio, pwm_channel=5, name = "465 nm")
-
-    camera_widget = CameraWidget(cam)
-    two_photon_widget = TwoPhoton(receiver)
+    led = LEDD1B(daio, pwm_channel=5, name = "465 nm") 
     led_widget = LEDWidget(led_drivers=[led])
+
+    # Control DMD
     dmd_widget = DMD(screen_num=SCREEN_DMD)
 
+    # 
     window = OptoDMD(camera_widget,two_photon_widget,led_widget,dmd_widget)
 
     app = QApplication(sys.argv)
