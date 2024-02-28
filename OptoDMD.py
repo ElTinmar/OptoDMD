@@ -1,7 +1,7 @@
 from Microscope import TwoPhoton, ImageReceiver
 from daq import LabJackU3LV, myArduino
 from LED import LEDD1B, LEDWidget
-from DMD import DMD, ImageSender
+from DMD import DMD
 from camera_tools import CameraWidget, XimeaCamera
 from PyQt5.QtWidgets import QApplication
 from alignment_tools import AlignAffine2D
@@ -32,12 +32,12 @@ if __name__ == "__main__":
     PORT = "5555"
     ZMQ_ADDRESS= "tcp://" + o1_263 + ":" + PORT
     SCREEN_DMD = 1
-    LABJACK_PWM_CHANNEL = 5
 
     receiver = ImageReceiver(ZMQ_ADDRESS)
     cam = XimeaCamera()
     daio = LabJackU3LV()
-    led = LEDD1B(daio, pwm_channel=LABJACK_PWM_CHANNEL, name = 'red')
+    #daio = myArduino("/dev/ttyUSB0")
+    led = LEDD1B(daio, pwm_channel=5, name = "465 nm")
 
     camera_widget = CameraWidget(cam)
     two_photon_widget = TwoPhoton(receiver)
