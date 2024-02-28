@@ -8,6 +8,7 @@ from alignment_tools import AlignAffine2D
 from image_tools import ROISelectorWidget
 import sys
 
+# TODO define protocols as input parameters instead of concrete classes ?
 
 class OptoDMD():
     
