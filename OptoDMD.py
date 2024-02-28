@@ -32,6 +32,8 @@ if __name__ == "__main__":
     ZMQ_ADDRESS= "tcp://" + o1_263 + ":" + PORT
     SCREEN_DMD = 1
 
+    app = QApplication(sys.argv)
+
     # Communication with ScanImage
     receiver = ImageReceiver(ZMQ_ADDRESS)
     two_photon_widget = TwoPhoton(receiver)
@@ -51,7 +53,10 @@ if __name__ == "__main__":
 
     # 
     window = OptoDMD(camera_widget,two_photon_widget,led_widget,dmd_widget)
-
-    app = QApplication(sys.argv)
     window.show()
+    
     app.exec()
+
+
+# TODO inherit from mask, make three tabs, one for Camera, one for TwoPhoton, one for DMD 
+# be 
