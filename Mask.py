@@ -91,6 +91,9 @@ class MaskListHeader(QWidget):
     pass
 class MaskListItem(QWidget):
 
+    hidden = pyqtSignal(int)
+    exposureChanged = pyqtSignal(int)
+
     def __init__(self, id: int, *args, **kwargs):
 
         super().__init__(*args, **kwargs)
@@ -102,8 +105,11 @@ class MaskListItem(QWidget):
     def create_components(self):
         
         self.hide = QCheckBox()
+        self.hide.stateChanged.connect(self.hidden)
+
         self.id = QLabel()
         self.id.setText(str(self.id))
+
         self.exposure_time = QLineEdit()
         self.exposure_time.setText(str(self.exposure_time))
         self.exposure_time.setValidator(QIntValidator(0,10_000,self))
@@ -117,7 +123,8 @@ class MaskListItem(QWidget):
         layout.addWidget(self.exposure_time)
     
     def set_exposure_time(self, ):
-        self.exposure_str = int(self.exposure_time.text())
+        self.exposure_time = int(self.exposure_time.text())
+        self.exposureChanged.emit(self.exposure_time)
         
 
 class WhatsYourName(QWidget):
