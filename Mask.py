@@ -93,6 +93,7 @@ class MaskListItem(QWidget):
 
     hidden = pyqtSignal(int)
     exposureChanged = pyqtSignal(int)
+    deletePressed = pyqtSignal()
 
     def __init__(self, id: int, *args, **kwargs):
 
@@ -104,13 +105,17 @@ class MaskListItem(QWidget):
 
     def create_components(self):
         
-        self.hide = QCheckBox()
+        self.hide = QCheckBox(self)
         self.hide.stateChanged.connect(self.hidden)
 
-        self.id = QLabel()
+        self.delete = QPushButton(self)
+        self.delete.setText('delete')
+        self.delete.pressed.connect(self.deletePressed)
+
+        self.id = QLabel(self)
         self.id.setText(str(self.id))
 
-        self.exposure_time = QLineEdit()
+        self.exposure_time = QLineEdit(self)
         self.exposure_time.setText(str(self.exposure_time))
         self.exposure_time.setValidator(QIntValidator(0,10_000,self))
         self.exposure_time.editingFinished.connect(self.set_exposure_time)
@@ -122,7 +127,7 @@ class MaskListItem(QWidget):
         layout.addWidget(self.id)
         layout.addWidget(self.exposure_time)
     
-    def set_exposure_time(self, ):
+    def set_exposure_time(self):
         self.exposure_time = int(self.exposure_time.text())
         self.exposureChanged.emit(self.exposure_time)
         
@@ -158,5 +163,6 @@ class WhatsYourName(QWidget):
 
     def mask_added(self):
 
-        list_item = QListWidgetItem(MaskListItem())
+        mask_item = MaskListItem(0)
+        list_item = QListWidgetItem(mask_item)
         self.polygon_list.addItem(list_item)
