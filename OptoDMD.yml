@@ -5,10 +5,11 @@ dependencies:
 - python == 3.8.16
 - pip
 - ipython
+- pyqt
 - labjackpython
 - pyfirmata
 - pyzmq
-- pyqt
+- opencv
 - pip:
   - git+https://github.com/ElTinmar/qt_widgets.git@main
   - git+https://github.com/ElTinmar/camera_tools.git@main
