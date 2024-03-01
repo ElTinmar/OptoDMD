@@ -42,6 +42,8 @@ class MaskTableItem(QWidget):
         layout.addWidget(self.show)
         layout.addWidget(self.name_label)
         layout.addWidget(self.delete)
+        layout.setContentsMargins(0,0,0,0)
+        layout.setSpacing(0)
     
     def change_name(self):
         self.name = self.name_label.text()
