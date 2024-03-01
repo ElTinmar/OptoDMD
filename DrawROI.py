@@ -29,6 +29,11 @@ class DrawPolyROI(QWidget):
         self.image_label.mousePressEvent = self.on_mouse_press    
         self.image_label.mouseMoveEvent = self.on_mouse_move
 
+        # special masks
+        self.checkerboard = QPushButton(self)
+        self.checkerboard.setText('checkerboard')
+        self.checkerboard.clicked.connect(self.create_checkerboard)
+
     def layout_components(self):
 
         main_layout = QHBoxLayout(self)
@@ -99,6 +104,19 @@ class DrawPolyROI(QWidget):
 
         self.mouse_pos = event.pos()
         self.update()
+
+    def create_checkerboard(self):
+
+        # create checkerboard (8 cells in smallest dimension)
+        h, w = self.image.shape[:2]
+        num_pixels = min(w,h) // 8
+        xv, yv = np.meshgrid(range(w), range(h), indexing='xy')
+        checkerboard = ((xv // num_pixels) + (yv // num_pixels)) % 2
+        checkerboard = 255*checkerboard.astype(np.uint8)
+
+        # update masks
+        self.polygons.append([])
+        self.masks.append(checkerboard)
 
 class MaskListHeader(QWidget):
     # show labels hide, id, exposure time
