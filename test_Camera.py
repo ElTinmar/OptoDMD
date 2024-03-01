@@ -1,9 +1,19 @@
-from camera_tools import CameraWidget, XimeaCamera, Camera
+from camera_tools import CameraPreview, CameraControl, RandomCam
+#from camera_tools import XimeaCamera
 from PyQt5.QtWidgets import QApplication
 import sys
+import numpy as np
 
-cam = XimeaCamera()
 app = QApplication(sys.argv)
-window = CameraWidget(cam)
-window.show()
+#cam = XimeaCamera()
+cam = RandomCam((512,512), np.uint8)
+
+# Use control widgets to control the emission of frames
+# This can be integrated in the main GUI
+controls = CameraControl(cam)
+
+# I am adding preview for fun
+preview = CameraPreview(controls)
+preview.show()
+
 app.exec()
