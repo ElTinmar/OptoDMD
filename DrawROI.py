@@ -34,11 +34,28 @@ class DrawPolyROI(QWidget):
         self.checkerboard.setText('checkerboard')
         self.checkerboard.clicked.connect(self.create_checkerboard)
 
+        self.whole_field = QPushButton(self)
+        self.whole_field.setText('whole field')
+        self.whole_field.clicked.connect(self.create_whole_field)
+
+        # mask management
+        self.mask_list = QListWidget(self)
+
     def layout_components(self):
 
-        main_layout = QHBoxLayout(self)
-        main_layout.addWidget(self.image_label)
+        buttons_layout = QHBoxLayout()
+        buttons_layout.addWidget(self.checkerboard)
+        buttons_layout.addWidget(self.whole_field)
+        buttons_layout.addStretch()
+        
+        buttons_and_image = QVBoxLayout()
+        buttons_and_image.addLayout(buttons_layout)
+        buttons_and_image.addWidget(self.image_label)
 
+        main_layout = QHBoxLayout(self)
+        main_layout.addLayout(buttons_and_image)
+        main_layout.addWidget(self.mask_list)
+       
     def set_image(self, image: NDArray):
         self.image = image
         self.image_label.setPixmap(NDarray_to_QPixmap(self.image))
@@ -117,6 +134,16 @@ class DrawPolyROI(QWidget):
         # update masks
         self.polygons.append([])
         self.masks.append(checkerboard)
+    
+    def create_whole_field(self):
+        
+        # create whole field
+        whole_field = 255*np.ones(self.image.shape[:2], dtype=np.uint8)
+
+        # update masks
+        self.polygons.append([])
+        self.masks.append(whole_field)
+
 
 class MaskListHeader(QWidget):
     # show labels hide, id, exposure time
