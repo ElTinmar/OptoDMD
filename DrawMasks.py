@@ -98,7 +98,7 @@ class DrawPolyMask(QWidget):
         self.clear.clicked.connect(self.clear_masks)
 
         self.mask_frame = QFrame(self)
-        self.mask_frame.setFrameStyle(QFrame.Panel)
+        #self.mask_frame.setFrameStyle(QFrame.Panel)
         
         self.scroll_area = QScrollArea()
         self.scroll_area.setWidget(self.mask_frame)
