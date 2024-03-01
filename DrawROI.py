@@ -1,3 +1,4 @@
+import cv2
 from PyQt5.QtCore import pyqtSignal, pyqtSlot, QRunnable, QThreadPool, QObject, Qt
 from PyQt5.QtWidgets import QLabel,  QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLineEdit, QCheckBox, QListWidget, QListWidgetItem
 from PyQt5.QtGui import QPainter, QColor, QFont, QPen, QIntValidator
@@ -6,7 +7,7 @@ import numpy as np
 from numpy.typing import NDArray
 from typing import Optional
 
-class Mask(QWidget):
+class DrawPolyROI(QWidget):
     
     def __init__(self, image: Optional[NDArray] = None, *args, **kwargs):
 
@@ -14,6 +15,7 @@ class Mask(QWidget):
 
         self.image = image or np.zeros((512,512,3),dtype=np.uint8)
         self.polygons = []
+        self.masks = []
         self.current_polygon = []
         self.create_components()
         self.layout_components()
@@ -74,8 +76,21 @@ class Mask(QWidget):
             
         # right-click closes polygon
         if event.button() == Qt.RightButton:
+
+            # close polygon
             self.current_polygon.append(self.current_polygon[0])
+
+            # store coordinates
+            coords = [[pt.x(), pt.y()] for pt in self.current_polygon]
+            coords = np.array(coords, dtype=np.int32)
             self.polygons.append(self.current_polygon)
+
+            # store mask
+            mask = np.zeros_like(self.image)
+            mask_RGB = cv2.fillPoly(mask, [coords], 255)
+            self.masks.append(mask_RGB[:,:,0])
+
+            # reset current polygon
             self.current_polygon = []
 
         self.update()
@@ -89,6 +104,7 @@ class MaskListHeader(QWidget):
     # show labels hide, id, exposure time
     # Maybe use a table instead?
     pass
+
 class MaskListItem(QWidget):
 
     hidden = pyqtSignal(int)

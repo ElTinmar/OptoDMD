@@ -1,8 +1,8 @@
-from Mask import Mask
+from DrawROI import DrawPolyROI
 from PyQt5.QtWidgets import QApplication
 import sys
 
 app = QApplication(sys.argv)
-window = Mask()
+window = DrawPolyROI()
 window.show()
 app.exec()
