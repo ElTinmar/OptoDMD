@@ -11,7 +11,7 @@ def deserialize(message: str) -> NDArray:
     data = [r.split(',') for r in message.split(';')]
     return np.array(data, dtype = np.float32)
 
-class Emitter(QObject):
+class ImageSignal(QObject):
     # only QObject can emit signals, not QRunnable
     image_ready = pyqtSignal(np.ndarray)
 
@@ -24,15 +24,18 @@ class ImageReceiver(QRunnable):
         self.context = zmq.Context()
         self.socket = self.context.socket(zmq.PULL)
         self.socket.connect(zmq_adress)
-        self.emitter = Emitter()
+        self.signal = ImageSignal()
+        self.keepgoing = True
+    
+    def stop(self):
+        self.keepgoing = False
 
     def run(self):
-        # maybe find something more interruptible
-        while True:
+        while self.keepgoing:
             message = self.socket.recv()
             image = deserialize(message.decode())
             image = (255*image).astype(np.uint8)
-            self.emitter.image_ready.emit(image)
+            self.signal.image_ready.emit(image)
 
 class TwoPhoton(QWidget):
 
@@ -40,7 +43,8 @@ class TwoPhoton(QWidget):
 
         super().__init__(*args, **kwargs)
 
-        receiver.emitter.image_ready.connect(self.display)
+        self.receiver = receiver
+        self.receiver.signal.image_ready.connect(self.display)
         self.thread_pool = QThreadPool()
         self.thread_pool.start(receiver)
 
@@ -52,3 +56,6 @@ class TwoPhoton(QWidget):
     def display(self, image: NDArray):
         self.twop_image.setPixmap(NDarray_to_QPixmap(image))
         self.update()
+
+    def closeEvent(self, event):
+        self.receiver.stop()
