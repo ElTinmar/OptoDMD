@@ -1,7 +1,7 @@
 import cv2
 from PyQt5.QtCore import pyqtSignal, pyqtSlot, Qt
-from PyQt5.QtWidgets import QLabel,  QWidget, QVBoxLayout, QHBoxLayout, QBoxLayout, QScrollArea, QPushButton, QFrame, QLineEdit, QCheckBox, QListWidget, QListWidgetItem
-from PyQt5.QtGui import QPainter, QColor, QPen, QIntValidator
+from PyQt5.QtWidgets import QLabel,  QWidget, QVBoxLayout, QHBoxLayout, QBoxLayout, QScrollArea, QPushButton, QFrame, QLineEdit, QCheckBox
+from PyQt5.QtGui import QPainter, QColor, QPen
 from qt_widgets import NDarray_to_QPixmap
 import numpy as np
 from numpy.typing import NDArray
