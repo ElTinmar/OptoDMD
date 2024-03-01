@@ -318,32 +318,3 @@ class DrawPolyMask(QWidget):
 
         # update display
         self.update()
-
-class WhatsYourName(QWidget):
-
-    def __init__(self, image: Optional[NDArray] = None, *args, **kwargs):
-
-        super().__init__(*args, **kwargs)
-
-        self.masks = []
-        self.create_components()
-        self.layout_components()
-
-    def create_components(self):
-
-        # ROI list 
-        self.polygon_list = QListWidget(self)
-
-
-    def layout_components(self):
-
-        right_panel = QVBoxLayout(self)
-        right_panel.addWidget(self.polygon_list)
-        right_panel.addWidget(self.flatten)
-
-
-    def mask_added(self):
-
-        mask_item = MaskListItem(0)
-        list_item = QListWidgetItem(mask_item)
-        self.polygon_list.addItem(list_item)
