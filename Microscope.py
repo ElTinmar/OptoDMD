@@ -34,7 +34,6 @@ class ImageReceiver(QRunnable):
         while self.keepgoing:
             message = self.socket.recv()
             image = deserialize(message.decode())
-            image = (255*image).astype(np.uint8)
             self.signal.image_ready.emit(image)
 
 class TwoPhoton(QWidget):
@@ -54,6 +53,7 @@ class TwoPhoton(QWidget):
 
     @pyqtSlot(np.ndarray)
     def display(self, image: NDArray):
+        image = (255*image).astype(np.uint8)
         self.twop_image.setPixmap(NDarray_to_QPixmap(image))
         self.update()
 
