@@ -2,6 +2,13 @@
 
 Control DMD device for patterned 1P optogenetics stimulation
 
+# Requirements
+
+- a modified DLP projector (replace lamp/LEDs by controllable high-power LEDs)
+- a two-photon microscope with ScanImage 
+- High-power LEDs
+- a LabJack/arduino 
+
 # Installation
 
 ## Windows
