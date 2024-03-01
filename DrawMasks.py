@@ -319,7 +319,6 @@ class DrawPolyMask(QWidget):
         # update display
         self.update()
 
-
 class WhatsYourName(QWidget):
 
     def __init__(self, image: Optional[NDArray] = None, *args, **kwargs):
