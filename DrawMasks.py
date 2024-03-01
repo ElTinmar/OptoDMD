@@ -1,12 +1,12 @@
 import cv2
-from PyQt5.QtCore import pyqtSignal, pyqtSlot, QRunnable, QThreadPool, QObject, Qt
-from PyQt5.QtWidgets import QLabel,  QWidget, QVBoxLayout, QHBoxLayout, QLayout, QBoxLayout, QScrollArea, QPushButton, QFrame, QLineEdit, QCheckBox, QListWidget, QListWidgetItem
+from PyQt5.QtCore import pyqtSignal, pyqtSlot, Qt
+from PyQt5.QtWidgets import QLabel,  QWidget, QVBoxLayout, QHBoxLayout, QBoxLayout, QScrollArea, QPushButton, QFrame, QLineEdit, QCheckBox, QListWidget, QListWidgetItem
 from PyQt5.QtGui import QPainter, QColor, QPen, QIntValidator
 from qt_widgets import NDarray_to_QPixmap
 import numpy as np
 from numpy.typing import NDArray
-from typing import Optional, Tuple
-
+from typing import Optional
+from image_tools import im2single, im2uint8
 
 class MaskTableItem(QWidget):
 
@@ -60,10 +60,14 @@ class DrawPolyMask(QWidget):
 
         super().__init__(*args, **kwargs)
 
-        self.image = image or np.zeros((512,512,3),dtype=np.uint8)
+        if image is None:
+            self.image = np.zeros((512,512,3),dtype=np.float32)
+        else:
+            self.image = im2single(image)
+
         self.masks = {}
-        self.current_polygon = []
         self.mask_widgets = {}
+        self.current_polygon = []
         self.create_components()
         self.layout_components()
 
@@ -71,7 +75,7 @@ class DrawPolyMask(QWidget):
         
         # label to draw on 
         self.image_label = QLabel(self)
-        self.image_label.setPixmap(NDarray_to_QPixmap(self.image))
+        self.image_label.setPixmap(NDarray_to_QPixmap(im2uint8(self.image)))
         self.image_label.setMouseTracking(True)
         self.image_label.mousePressEvent = self.on_mouse_press    
         self.image_label.mouseMoveEvent = self.on_mouse_move
@@ -133,8 +137,9 @@ class DrawPolyMask(QWidget):
         main_layout.addLayout(mask_controls)
        
     def set_image(self, image: NDArray):
-        self.image = image
-        self.image_label.setPixmap(NDarray_to_QPixmap(self.image))
+
+        self.image_label.setPixmap(NDarray_to_QPixmap(im2uint8(image)))
+        self.image = im2single(image)
 
     def paintEvent(self, event):
         
@@ -145,9 +150,10 @@ class DrawPolyMask(QWidget):
             show, mask = mask_tuple
             if show:
                 im_display += np.dstack((mask,mask,mask))
-        
+        im_display = np.clip(im_display,0,1)
+
         # update image label
-        self.image_label.setPixmap(NDarray_to_QPixmap(im_display))
+        self.image_label.setPixmap(NDarray_to_QPixmap(im2uint8(im_display)))
 
         # show current poly 
         painter = QPainter(self.image_label.pixmap())
@@ -167,6 +173,7 @@ class DrawPolyMask(QWidget):
         
         # left-click adds a new point to polygon
         if event.button() == Qt.LeftButton:
+
             self.current_polygon.append(event.pos())
 
             # remove point with shift pressed
@@ -185,11 +192,11 @@ class DrawPolyMask(QWidget):
 
             # store mask
             coords = [[pt.x(), pt.y()] for pt in self.current_polygon]
-            coords = np.array(coords, dtype=np.int32)
-            mask = np.zeros_like(self.image)
+            coords = np.array(coords, dtype = np.int32)
+            mask = np.zeros_like(self.image, dtype=np.float32)
             mask_RGB = cv2.fillPoly(mask, [coords], 255)
             show_mask = True
-            self.masks[key] = (show_mask, mask_RGB[:,:,0])
+            self.masks[key] = (show_mask, im2single(mask_RGB[:,:,0]))
 
             # add widget
             widget = MaskTableItem(key)
@@ -237,7 +244,7 @@ class DrawPolyMask(QWidget):
         num_pixels = min(w,h) // 8
         xv, yv = np.meshgrid(range(w), range(h), indexing='xy')
         checkerboard = ((xv // num_pixels) + (yv // num_pixels)) % 2
-        checkerboard = 255*checkerboard.astype(np.uint8)
+        checkerboard = checkerboard.astype(np.float32)
 
         # update masks
         self.masks[key] = (True, checkerboard)
@@ -256,7 +263,7 @@ class DrawPolyMask(QWidget):
         key = max(mask_keys) + 1
 
         # create whole field
-        whole_field = 255*np.ones(self.image.shape[:2], dtype=np.uint8)
+        whole_field = np.ones(self.image.shape[:2], dtype=np.float32)
 
         # update masks
         self.masks[key] = (True, whole_field)
@@ -271,10 +278,11 @@ class DrawPolyMask(QWidget):
     def flatten_masks(self):
         
         # flatten masks
-        flat = np.zeros(self.image.shape[:2], dtype=np.uint8)
+        flat = np.zeros(self.image.shape[:2], dtype=np.float32)
         for key, mask_tuple in self.masks.items():
             mask = mask_tuple[1]
             flat += mask
+        flat = np.clip(flat,0,1)
 
         # store flat mask
         self.masks = {}
@@ -311,54 +319,6 @@ class DrawPolyMask(QWidget):
         # update display
         self.update()
 
-
-class MaskListHeader(QWidget):
-    # show labels hide, id, exposure time
-    # Maybe use a table instead?
-    pass
-
-class MaskListItem(QWidget):
-
-    hidden = pyqtSignal(int)
-    exposureChanged = pyqtSignal(int)
-    deletePressed = pyqtSignal()
-
-    def __init__(self, id: int, *args, **kwargs):
-
-        super().__init__(*args, **kwargs)
-        self.id = id
-        self.exposure_time = 0
-        self.create_components()
-        self.layout_components()
-
-    def create_components(self):
-        
-        self.hide = QCheckBox(self)
-        self.hide.stateChanged.connect(self.hidden)
-
-        self.delete = QPushButton(self)
-        self.delete.setText('delete')
-        self.delete.pressed.connect(self.deletePressed)
-
-        self.id = QLabel(self)
-        self.id.setText(str(self.id))
-
-        self.exposure_time = QLineEdit(self)
-        self.exposure_time.setText(str(self.exposure_time))
-        self.exposure_time.setValidator(QIntValidator(0,10_000,self))
-        self.exposure_time.editingFinished.connect(self.set_exposure_time)
-
-    def layout_components(self):
-        
-        layout = QHBoxLayout(self)
-        layout.addWidget(self.hide)
-        layout.addWidget(self.id)
-        layout.addWidget(self.exposure_time)
-    
-    def set_exposure_time(self):
-        self.exposure_time = int(self.exposure_time.text())
-        self.exposureChanged.emit(self.exposure_time)
-        
 
 class WhatsYourName(QWidget):
 
