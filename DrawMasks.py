@@ -199,7 +199,7 @@ class DrawPolyMask(QWidget):
             self.masks[key] = (show_mask, im2single(mask_RGB[:,:,0]))
 
             # add widget
-            widget = MaskTableItem(key)
+            widget = MaskTableItem(key, str(key))
             widget.showClicked.connect(self.mask_visibility)
             widget.deletePressed.connect(self.delete_mask)
             self.mask_widgets[key] = widget
