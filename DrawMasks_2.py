@@ -71,17 +71,17 @@ class DrawPolyMask(QWidget):
        
     def paintEvent(self, event):
         
-        im_display = self.image.copy()
+        self.im_display = self.image.copy()
 
         # add masks 
         for key, mask_tuple in self.masks.items():
             show, mask = mask_tuple
             if show:
                 im_display += np.dstack((mask,mask,mask))
-        im_display = np.clip(im_display,0,1)
+        self.im_display = np.clip(im_display,0,1)
 
         # update image label
-        self.image_label.setPixmap(NDarray_to_QPixmap(im2uint8(im_display)))
+        self.image_label.setPixmap(NDarray_to_QPixmap(im2uint8(self.im_display)))
 
         # show current poly 
         painter = QPainter(self.image_label.pixmap())
@@ -253,6 +253,20 @@ class DrawPolyMaskOpto(DrawPolyMask):
 
         # send signal
         self.mask_drawn.emit(self.ID, key, whole_field)
+
+class DrawPolyMaskOptoDMD(DrawPolyMaskOpto):
+
+    DMD_update = pyqtSignal(np.ndarray)
+
+    def __init__(self, height: int, width: int, *args, **kwargs):
+
+        image = np.zeros((height, width))
+        super().__init__(image, *args, **kwargs)
+    
+    def paintEvent(self, event):
+        
+        super().paintEvent(event)
+        self.DMD_update.emit(self.im_display)
 
 class MaskItem(QWidget):
 
