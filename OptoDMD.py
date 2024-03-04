@@ -8,8 +8,6 @@ from alignment_tools import AlignAffine2D
 from image_tools import ROISelectorWidget
 import sys
 
-# TODO define protocols as input parameters instead of concrete classes ?
-
 class OptoDMD():
     
     def __init__(
@@ -17,13 +15,16 @@ class OptoDMD():
             camera: CameraControl,
             two_photon: TwoPhoton,
             led: LEDWidget,
-            dmd: DMD
+            dmd: DMD,
+            calibration_file: str
         ) -> None:
 
         self.camera = camera
         self.two_photon = two_photon
         self.led = led
         self.dmd = dmd
+        self.calibration_file = calibration_file
+
     
 if __name__ == "__main__":
 
@@ -31,6 +32,7 @@ if __name__ == "__main__":
     PORT = "5555"
     ZMQ_ADDRESS= "tcp://" + o1_263 + ":" + PORT
     SCREEN_DMD = 1
+    CALIBRATION_FILE = "dmd.cal"
 
     app = QApplication(sys.argv)
 
@@ -52,7 +54,7 @@ if __name__ == "__main__":
     dmd_widget = DMD(screen_num=SCREEN_DMD)
 
     # 
-    window = OptoDMD(camera_controls,two_photon_widget,led_widget,dmd_widget)
+    window = OptoDMD(camera_controls,two_photon_widget,led_widget,dmd_widget,CALIBRATION_FILE)
     window.show()
     
     app.exec()
