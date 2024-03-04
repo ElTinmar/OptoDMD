@@ -1,4 +1,5 @@
 from DrawMasks_2 import  MaskManager, DrawPolyMaskOpto
+from camera_tools import CameraPreview, CameraControl, RandomCam, OpenCV_Webcam
 from PyQt5.QtWidgets import QApplication
 import sys
 import cv2
@@ -10,9 +11,16 @@ transformations = np.tile(np.eye(3), (3,3,1,1))
 
 app = QApplication(sys.argv)
 
+webcam = OpenCV_Webcam()
+webcam_controls = CameraControl(webcam)
+
 cam = DrawPolyMaskOpto(image)
 dmd = DrawPolyMaskOpto(image)
 twop = DrawPolyMaskOpto(image)
+
+webcam_controls.image_ready.connect(cam.set_image)
+webcam_controls.show()
+
 window = MaskManager([cam, dmd, twop], ["Camera", "DMD", "Two Photon"], transformations)
 window.show()
 cam.show()
