@@ -220,7 +220,7 @@ class DrawPolyMask(QWidget):
         self.mask_drawn.emit(self.ID, key, whole_field)
 
 
-class MaskTableItem(QWidget):
+class MaskItem(QWidget):
 
     showClicked = pyqtSignal(int,int)
     deletePressed = pyqtSignal(int)
@@ -360,7 +360,7 @@ class MaskManager(QWidget):
                 self.send_mask.emit(idx, key, mask_transformed)
                 
         # add widget 
-        widget = MaskTableItem(key, str(key))
+        widget = MaskItem(key, str(key))
         widget.showClicked.connect(self.on_mask_visibility)
         widget.deletePressed.connect(self.on_delete_mask)
         self.mask_widgets[key] = widget
@@ -405,7 +405,7 @@ class MaskManager(QWidget):
             self.mask_widgets = {}
 
             # update widget
-            widget = MaskTableItem(1, "flat")
+            widget = MaskItem(1, "flat")
             widget.showClicked.connect(self.on_mask_visibility)
             widget.deletePressed.connect(self.on_delete_mask)
             self.frame_layout.addWidget(widget)
