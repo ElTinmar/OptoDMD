@@ -15,7 +15,7 @@ class ImageSignal(QObject):
     # only QObject can emit signals, not QRunnable
     image_ready = pyqtSignal(np.ndarray)
 
-class ImageReceiver(QRunnable):
+class ImageSender(QRunnable):
 
     def __init__(self, zmq_adress, *args, **kwargs):
 
@@ -38,14 +38,14 @@ class ImageReceiver(QRunnable):
 
 class TwoPhoton(QWidget):
 
-    def __init__(self, receiver: ImageReceiver, *args, **kwargs):
+    def __init__(self, sender: ImageSender, *args, **kwargs):
 
         super().__init__(*args, **kwargs)
 
-        self.receiver = receiver
-        self.receiver.signal.image_ready.connect(self.display)
+        self.sender = sender
+        self.sender.signal.image_ready.connect(self.display)
         self.thread_pool = QThreadPool()
-        self.thread_pool.start(receiver)
+        self.thread_pool.start(sender)
 
         self.twop_image = QLabel(self)
         self.twop_image.setFixedWidth(512)
@@ -58,4 +58,4 @@ class TwoPhoton(QWidget):
         self.update()
 
     def closeEvent(self, event):
-        self.receiver.stop()
+        self.sender.stop()
