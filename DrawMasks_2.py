@@ -394,19 +394,19 @@ class MaskManager(QWidget):
 
     def on_flatten_mask(self):
 
-        # TODO, if there is no masks, do nothing
+        if self.mask_widgets:
 
-        self.flatten_mask.emit()
+            self.flatten_mask.emit()
 
-        # remove widgets
-        for key, widget in self.mask_widgets.items():
-            self.frame_layout.removeWidget(widget)
-            widget.deleteLater()
-        self.mask_widgets = {}
+            # remove widgets
+            for key, widget in self.mask_widgets.items():
+                self.frame_layout.removeWidget(widget)
+                widget.deleteLater()
+            self.mask_widgets = {}
 
-        # update widget
-        widget = MaskTableItem(1, "flat")
-        widget.showClicked.connect(self.on_mask_visibility)
-        widget.deletePressed.connect(self.on_delete_mask)
-        self.frame_layout.addWidget(widget)
-        self.mask_widgets[1] = widget
+            # update widget
+            widget = MaskTableItem(1, "flat")
+            widget.showClicked.connect(self.on_mask_visibility)
+            widget.deletePressed.connect(self.on_delete_mask)
+            self.frame_layout.addWidget(widget)
+            self.mask_widgets[1] = widget
