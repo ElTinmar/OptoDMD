@@ -382,7 +382,9 @@ class MaskManager(QWidget):
             if not idx == drawer_ID:
 
                 T = self.transformations[drawer_ID, idx, :2, :]
-                mask_transformed =  cv2.warpAffine(mask, T, drawer.get_image_size())
+                shape = drawer.get_image_size()
+                dsize = shape[::-1] # opencv expects (col, rows)
+                mask_transformed = cv2.warpAffine(mask, T, dsize)
                 self.send_mask.emit(idx, key, mask_transformed)
                 
         # add widget 
