@@ -6,6 +6,7 @@ import numpy as np
 
 image = cv2.imread('toy_data/image_00.jpg')
 transformations = np.tile(np.eye(3), (3,3,1,1))
+#transformations[0,1,0,0] = 2.0
 app = QApplication(sys.argv)
 
 cam = DrawPolyMask(image)
