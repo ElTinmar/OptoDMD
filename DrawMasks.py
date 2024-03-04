@@ -1,6 +1,6 @@
 import cv2
 from PyQt5.QtCore import pyqtSignal, pyqtSlot, Qt
-from PyQt5.QtWidgets import QLabel,  QWidget, QVBoxLayout, QHBoxLayout, QBoxLayout, QScrollArea, QPushButton, QFrame, QLineEdit, QCheckBox
+from PyQt5.QtWidgets import QLabel,  QWidget, QVBoxLayout, QHBoxLayout, QBoxLayout, QTabWidget, QScrollArea, QPushButton, QFrame, QLineEdit, QCheckBox
 from PyQt5.QtGui import QPainter, QColor, QPen
 from qt_widgets import NDarray_to_QPixmap
 import numpy as np
@@ -55,6 +55,8 @@ class MaskTableItem(QWidget):
         self.deletePressed.emit(self.mask_index)
 
 class DrawPolyMask(QWidget):
+
+    mask_drawn = pyqtSignal(np.ndarray)
     
     def __init__(self, image: Optional[NDArray] = None, *args, **kwargs):
 
@@ -70,6 +72,9 @@ class DrawPolyMask(QWidget):
         self.current_polygon = []
         self.create_components()
         self.layout_components()
+
+    def image_size(self):
+        return self.image.shape[:2]
 
     def create_components(self):
         
@@ -195,8 +200,9 @@ class DrawPolyMask(QWidget):
             coords = np.array(coords, dtype = np.int32)
             mask = np.zeros_like(self.image, dtype=np.float32)
             mask_RGB = cv2.fillPoly(mask, [coords], 255)
+            mask_gray = im2single(mask_RGB[:,:,0])
             show_mask = True
-            self.masks[key] = (show_mask, im2single(mask_RGB[:,:,0]))
+            self.masks[key] = (show_mask, mask_gray)
 
             # add widget
             widget = MaskTableItem(key, str(key))
@@ -208,7 +214,27 @@ class DrawPolyMask(QWidget):
             # reset current polygon
             self.current_polygon = []
 
+            # send signal
+            self.mask_drawn.emit(mask_gray)
+
         self.update()
+
+    def on_mask_receive(self, mask):
+
+        # create key
+        mask_keys = self.masks.keys() or [0]
+        key = max(mask_keys) + 1
+
+        # store mask
+        show_mask = True
+        self.masks[key] = (show_mask, mask)
+
+        # add widget
+        widget = MaskTableItem(key, str(key))
+        widget.showClicked.connect(self.mask_visibility)
+        widget.deletePressed.connect(self.delete_mask)
+        self.mask_widgets[key] = widget
+        self.frame_layout.addWidget(widget)
 
     def on_mouse_move(self, event):
 
@@ -255,6 +281,9 @@ class DrawPolyMask(QWidget):
         widget.deletePressed.connect(self.delete_mask)
         self.mask_widgets[key] = widget
         self.frame_layout.addWidget(widget)
+
+        # send signal
+        self.mask_drawn.emit(checkerboard)
     
     def create_whole_field(self):
         
@@ -274,6 +303,9 @@ class DrawPolyMask(QWidget):
         widget.deletePressed.connect(self.delete_mask)
         self.mask_widgets[key] = widget
         self.frame_layout.addWidget(widget)
+
+        # send signal
+        self.mask_drawn.emit(whole_field)
 
     def flatten_masks(self):
         
@@ -301,6 +333,9 @@ class DrawPolyMask(QWidget):
         self.frame_layout.addWidget(widget)
         self.mask_widgets[1] = widget
 
+        # send signal
+        self.mask_drawn.emit(flat)
+
         # update display
         self.update()
 
@@ -318,3 +353,99 @@ class DrawPolyMask(QWidget):
 
         # update display
         self.update()
+
+
+class Bla(QWidget):
+
+    cam_mask_computed = pyqtSignal(np.ndarray)
+    dmd_mask_computed = pyqtSignal(np.ndarray)
+    twop_mask_computed = pyqtSignal(np.ndarray)
+
+    def __init__(
+        self, 
+        dmd_mask_drawer: DrawPolyMask, 
+        cam_mask_drawer: DrawPolyMask, 
+        twop_mask_drawer: DrawPolyMask,
+        *args, **kwargs
+    ) -> None:
+        
+        super().__init__(*args, **kwargs)
+
+        self.dmd_mask_drawer = dmd_mask_drawer
+        self.cam_mask_drawer = cam_mask_drawer
+        self.twop_mask_drawer = twop_mask_drawer
+        
+        self.dmd_mask_drawer.mask_drawn.connect(self.on_dmd_mask)
+        self.cam_mask_drawer.mask_drawn.connect(self.on_cam_mask)
+        self.twop_mask_drawer.mask_drawn.connect(self.on_twop_mask)
+
+        # is it OK to create that connection from outside ?
+        self.cam_mask_computed.connect(self.cam_mask_drawer.on_mask_receive)
+        self.dmd_mask_computed.connect(self.dmd_mask_drawer.on_mask_receive)
+        self.twop_mask_computed.connect(self.twop_mask_drawer.on_mask_receive)
+
+        # TODO receive as argument, or read from file
+        self.T_cam2dmd = np.eye(3)
+        self.T_cam2twop = np.eye(3)
+        self.T_dmd2cam = np.eye(3)
+        self.T_dmd2twop = np.eye(3)
+        self.T_twop2cam = np.eye(3)
+        self.T_twop2dmd = np.eye(3)
+
+        self.layout_components()
+
+    def on_dmd_mask(self, mask: np.ndarray):
+
+        mask_cam = cv2.warpAffine(
+            mask, 
+            self.T_dmd2cam[:2,:], 
+            self.cam_mask_drawer.image_size()
+        )
+        mask_twop = cv2.warpAffine(
+            mask, 
+            self.T_dmd2twop[:2,:], 
+            self.twop_mask_drawer.image_size()
+        )
+        self.cam_mask_computed.emit(mask_cam)
+        self.twop_mask_computed.emit(mask_twop)
+    
+    def on_cam_mask(self, mask: np.ndarray):
+
+        mask_dmd = cv2.warpAffine(
+            mask, 
+            self.T_cam2dmd[:2,:], 
+            self.dmd_mask_drawer.image_size()
+        )
+        mask_twop = cv2.warpAffine(
+            mask, 
+            self.T_cam2twop[:2,:], 
+            self.twop_mask_drawer.image_size()
+        )
+        self.dmd_mask_computed.emit(mask_dmd)
+        self.twop_mask_computed.emit(mask_twop)
+
+    def on_twop_mask(self, mask: np.ndarray):
+        
+        mask_cam = cv2.warpAffine(
+            mask, 
+            self.T_twop2cam[:2,:], 
+            self.cam_mask_drawer.image_size()
+        )
+        mask_dmd = cv2.warpAffine(
+            mask, 
+            self.T_twop2dmd[:2,:], 
+            self.dmd_mask_drawer.image_size()
+        )
+        self.cam_mask_computed.emit(mask_cam)
+        self.dmd_mask_computed.emit(mask_dmd)
+
+    def layout_components(self):
+
+        tabs = QTabWidget()
+        tabs.addTab(self.dmd_mask_drawer, "DMD")
+        tabs.addTab(self.cam_mask_drawer, "Camera")
+        tabs.addTab(self.twop_mask_drawer, "Two Photon")
+
+        layout = QHBoxLayout(self)
+        layout.addWidget(tabs)
+
