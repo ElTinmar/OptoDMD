@@ -42,6 +42,8 @@ class DrawPolyMask(QWidget):
         self.image_label.setPixmap(NDarray_to_QPixmap(im2uint8(image)))
         self.image = im2single(image)
         self.update()
+        h, w = self.image.shape[:2]
+        self.image_label.setFixedSize(w,h)
 
     def get_image_size(self):
         
@@ -55,6 +57,9 @@ class DrawPolyMask(QWidget):
         self.image_label.setMouseTracking(True)
         self.image_label.mousePressEvent = self.on_mouse_press    
         self.image_label.mouseMoveEvent = self.on_mouse_move
+
+        h, w = self.image.shape[:2]
+        self.image_label.setFixedSize(w,h)
 
     def layout_components(self):
 
