@@ -41,9 +41,12 @@ class DrawPolyMask(QWidget):
 
         self.image_label.setPixmap(NDarray_to_QPixmap(im2uint8(image)))
         self.image = im2single(image)
-        self.update()
+        
+        # fix label size to image size 
         h, w = self.image.shape[:2]
         self.image_label.setFixedSize(w,h)
+
+        self.update()
 
     def get_image_size(self):
         
