@@ -9,6 +9,12 @@ from typing import Optional, List
 from image_tools import im2single, im2uint8
 
 class DrawPolyMask(QWidget):
+    """
+    Generic class to draw polygons on top of an image using the mouse.
+    Left click to add point to polygon.
+    Right click to close polygon.
+    Sends mask_drawn signal each time a mask is added
+    """
 
     mask_drawn = pyqtSignal(int, int, np.ndarray)
     
@@ -50,25 +56,10 @@ class DrawPolyMask(QWidget):
         self.image_label.mousePressEvent = self.on_mouse_press    
         self.image_label.mouseMoveEvent = self.on_mouse_move
 
-        # special masks
-        self.checkerboard = QPushButton(self)
-        self.checkerboard.setText('checkerboard')
-        self.checkerboard.clicked.connect(self.create_checkerboard)
-
-        self.whole_field = QPushButton(self)
-        self.whole_field.setText('whole field')
-        self.whole_field.clicked.connect(self.create_whole_field)
-
     def layout_components(self):
 
-        draw_buttons_layout = QHBoxLayout()
-        draw_buttons_layout.addWidget(self.checkerboard)
-        draw_buttons_layout.addWidget(self.whole_field)
-        draw_buttons_layout.addStretch()
-        
-        buttons_and_image = QVBoxLayout(self)
-        buttons_and_image.addLayout(draw_buttons_layout)
-        buttons_and_image.addWidget(self.image_label)
+        self.layout = QVBoxLayout(self)
+        self.layout.addWidget(self.image_label)
        
     def paintEvent(self, event):
         
@@ -140,6 +131,42 @@ class DrawPolyMask(QWidget):
 
         self.mouse_pos = event.pos()
         self.update()
+
+
+class DrawPolyMaskOpto(DrawPolyMask):
+    """
+    Derived class implementing slots to receive, delete, clear, flatten,
+    or hide masks
+    """
+
+    def __init__(self, image: Optional[NDArray] = None, *args, **kwargs):
+    
+        super().__init__(image, *args, **kwargs)
+
+    def create_components(self):
+
+        super().create_components()
+
+        # special masks
+        self.checkerboard = QPushButton(self)
+        self.checkerboard.setText('checkerboard')
+        self.checkerboard.clicked.connect(self.create_checkerboard)
+
+        self.whole_field = QPushButton(self)
+        self.whole_field.setText('whole field')
+        self.whole_field.clicked.connect(self.create_whole_field)
+
+    def layout_components(self):
+
+        super().layout_components()
+
+        draw_buttons_layout = QHBoxLayout()
+        draw_buttons_layout.addWidget(self.checkerboard)
+        draw_buttons_layout.addWidget(self.whole_field)
+        draw_buttons_layout.addStretch()
+
+        self.layout.setDirection(QBoxLayout.BottomToTop)
+        self.layout.addLayout(draw_buttons_layout)
 
     def on_mask_receive(self, recipient: int, key: int, mask: NDArray):
          
@@ -218,7 +245,6 @@ class DrawPolyMask(QWidget):
 
         # send signal
         self.mask_drawn.emit(self.ID, key, whole_field)
-
 
 class MaskItem(QWidget):
 
