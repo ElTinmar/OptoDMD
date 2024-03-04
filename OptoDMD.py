@@ -2,7 +2,7 @@ from Microscope import TwoPhoton, ImageReceiver
 from daq import LabJackU3LV, myArduino
 from LED import LEDD1B, LEDWidget
 from DMD import DMD
-from camera_tools import CameraWidget, XimeaCamera
+from camera_tools import XimeaCamera, CameraControl
 from PyQt5.QtWidgets import QApplication
 from alignment_tools import AlignAffine2D
 from image_tools import ROISelectorWidget
@@ -14,7 +14,7 @@ class OptoDMD():
     
     def __init__(
             self, 
-            camera: CameraWidget,
+            camera: CameraControl,
             two_photon: TwoPhoton,
             led: LEDWidget,
             dmd: DMD
@@ -40,7 +40,7 @@ if __name__ == "__main__":
 
     # Camera 
     cam = XimeaCamera()
-    camera_widget = CameraWidget(cam)
+    camera_controls = CameraControl(cam)
 
     # Control LEDs
     daio = LabJackU3LV()
@@ -52,7 +52,7 @@ if __name__ == "__main__":
     dmd_widget = DMD(screen_num=SCREEN_DMD)
 
     # 
-    window = OptoDMD(camera_widget,two_photon_widget,led_widget,dmd_widget)
+    window = OptoDMD(camera_controls,two_photon_widget,led_widget,dmd_widget)
     window.show()
     
     app.exec()
