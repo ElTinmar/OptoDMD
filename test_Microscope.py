@@ -1,4 +1,4 @@
-from Microscope import TwoPhoton, ImageReceiver
+from Microscope import TwoPhoton, ImageSender
 from PyQt5.QtWidgets import QApplication
 import sys
 
@@ -7,7 +7,7 @@ PORT = "5555"
 zmq_address= "tcp://" + o1_263 + ":" + PORT
 
 app = QApplication(sys.argv)
-receiver = ImageReceiver(zmq_address)
-window = TwoPhoton(receiver)
+sender = ImageSender(zmq_address)
+window = TwoPhoton(sender)
 window.show()
 app.exec()
