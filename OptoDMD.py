@@ -7,6 +7,7 @@ from PyQt5.QtWidgets import QApplication
 from alignment_tools import AlignAffine2D
 from image_tools import ROISelectorWidget
 import sys
+import numpy as np
 
 class OptoDMD():
     
@@ -32,7 +33,10 @@ if __name__ == "__main__":
     PORT = "5555"
     ZMQ_ADDRESS= "tcp://" + o1_263 + ":" + PORT
     SCREEN_DMD = 1
-    CALIBRATION_FILE = "dmd.cal"
+    transformations = np.tile(np.eye(3), (3,3,1,1))
+    DMD_HEIGHT = 2560//2
+    DMD_WIDTH = 1440//2
+
 
     app = QApplication(sys.argv)
 
