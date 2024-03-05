@@ -3,9 +3,9 @@ from DrawMasks import  MaskManager, DrawPolyMaskOpto, DrawPolyMaskOptoDMD
 from daq import LabJackU3LV, myArduino
 from LED import LEDD1B, LEDWidget
 from DMD import DMD
-from camera_tools import XimeaCamera, CameraControl
+#from camera_tools import XimeaCamera, CameraControl
+from camera_tools import CameraControl, OpenCV_Webcam
 from PyQt5.QtWidgets import QApplication
-from alignment_tools import AlignAffine2D
 import sys
 import numpy as np
 
@@ -25,7 +25,8 @@ if __name__ == "__main__":
     twop_sender = ImageSender(ZMQ_ADDRESS)
 
     # Camera 
-    cam = XimeaCamera()
+    #cam = XimeaCamera()
+    cam = OpenCV_Webcam()
     camera_controls = CameraControl(cam)
 
     # Control LEDs
@@ -52,6 +53,5 @@ if __name__ == "__main__":
     camera_controls.show()
     masks.show()
     led_widget.show()
-    dmd_mask.show()
 
     app.exec()
