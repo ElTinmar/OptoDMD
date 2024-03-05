@@ -70,6 +70,8 @@ class DrawPolyMask(QWidget):
 
         self.layout = QVBoxLayout(self)
         self.layout.addWidget(self.image_label)
+        self.layout.addStretch()
+        
        
     def paintEvent(self, event):
         
@@ -175,8 +177,7 @@ class DrawPolyMaskOpto(DrawPolyMask):
         draw_buttons_layout.addWidget(self.whole_field)
         draw_buttons_layout.addStretch()
 
-        self.layout.setDirection(QBoxLayout.BottomToTop)
-        self.layout.addLayout(draw_buttons_layout)
+        self.layout.insertLayout(0, draw_buttons_layout)
 
     def on_mask_receive(self, recipient: int, key: int, mask: NDArray):
          

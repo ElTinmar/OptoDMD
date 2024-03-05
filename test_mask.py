@@ -9,8 +9,8 @@ import numpy as np
 image = cv2.imread('toy_data/image_00.jpg')
 transformations = np.tile(np.eye(3), (3,3,1,1))
 #transformations[0,1,0,0] = 2.0
-DMD_HEIGHT = 2560
-DMD_WIDTH = 1440
+DMD_HEIGHT = 2560//2
+DMD_WIDTH = 1440//2
 
 app = QApplication(sys.argv)
 webcam = OpenCV_Webcam()
