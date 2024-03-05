@@ -9,6 +9,7 @@ from typing import Optional, List
 from image_tools import im2single, im2uint8
 
 # TODO handle better if image is RGB or grayscale
+# TODO images are updated only when clicking on the tab
 
 class DrawPolyMask(QWidget):
     """
