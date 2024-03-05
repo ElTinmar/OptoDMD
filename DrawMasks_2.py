@@ -79,7 +79,7 @@ class DrawPolyMask(QWidget):
         for key, mask_tuple in self.masks.items():
             show, mask = mask_tuple
             if show:
-                im_display += np.dstack((mask,mask,mask))
+                self.im_display += np.dstack((mask,mask,mask))
         self.im_display = np.clip(self.im_display,0,1)
 
         # update image label
