@@ -15,7 +15,7 @@ DMD_WIDTH = 920
 app = QApplication(sys.argv)
 webcam = OpenCV_Webcam()
 webcam_controls = CameraControl(webcam)
-dmd_display = DMD(screen_num=1)
+dmd_display = DMD(screen_num=0)
 cam_mask = DrawPolyMaskOpto(image)
 dmd_mask = DrawPolyMaskOptoDMD(DMD_HEIGHT, DMD_WIDTH)
 twop_mask = DrawPolyMaskOpto(image)
