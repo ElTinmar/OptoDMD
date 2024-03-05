@@ -268,7 +268,7 @@ class DrawPolyMaskOptoDMD(DrawPolyMaskOpto):
     def paintEvent(self, event):
         
         super().paintEvent(event)
-        self.DMD_update.emit(self.im_display)
+        self.DMD_update.emit(im2uint8(self.im_display))
 
 class MaskItem(QWidget):
 

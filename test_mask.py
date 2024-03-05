@@ -9,13 +9,13 @@ import numpy as np
 image = cv2.imread('toy_data/image_00.jpg')
 transformations = np.tile(np.eye(3), (3,3,1,1))
 #transformations[0,1,0,0] = 2.0
-DMD_HEIGHT = 1140
-DMD_WIDTH = 920
+DMD_HEIGHT = 2560
+DMD_WIDTH = 1440
 
 app = QApplication(sys.argv)
 webcam = OpenCV_Webcam()
 webcam_controls = CameraControl(webcam)
-dmd_display = DMD(screen_num=0)
+dmd_display = DMD(screen_num=2)
 cam_mask = DrawPolyMaskOpto(image)
 dmd_mask = DrawPolyMaskOptoDMD(DMD_HEIGHT, DMD_WIDTH)
 twop_mask = DrawPolyMaskOpto(image)
