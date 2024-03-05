@@ -78,7 +78,7 @@ class DrawPolyMask(QWidget):
             show, mask = mask_tuple
             if show:
                 im_display += np.dstack((mask,mask,mask))
-        self.im_display = np.clip(im_display,0,1)
+        self.im_display = np.clip(self.im_display,0,1)
 
         # update image label
         self.image_label.setPixmap(NDarray_to_QPixmap(im2uint8(self.im_display)))
