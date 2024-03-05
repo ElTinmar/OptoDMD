@@ -8,6 +8,8 @@ from numpy.typing import NDArray
 from typing import Optional, List
 from image_tools import im2single, im2uint8
 
+# TODO handle better if image is RGB or grayscale
+
 class DrawPolyMask(QWidget):
     """
     Generic class to draw polygons on top of an image using the mouse.
@@ -260,7 +262,7 @@ class DrawPolyMaskOptoDMD(DrawPolyMaskOpto):
 
     def __init__(self, height: int, width: int, *args, **kwargs):
 
-        image = np.zeros((height, width))
+        image = np.zeros((height, width, 3))
         super().__init__(image, *args, **kwargs)
     
     def paintEvent(self, event):
