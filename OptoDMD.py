@@ -15,9 +15,8 @@ if __name__ == "__main__":
     PORT = "5555"
     ZMQ_ADDRESS= "tcp://" + O1_263 + ":" + PORT
     SCREEN_DMD = 2
-    TRANSFORMATIONS = np.tile(np.eye(3), (3,3,1,1))
-    DMD_HEIGHT = 2560//2
-    DMD_WIDTH = 1440//2
+    DMD_HEIGHT = 2560
+    DMD_WIDTH = 1440
 
     app = QApplication(sys.argv)
 
@@ -32,7 +31,7 @@ if __name__ == "__main__":
     # Control LEDs
     daio = LabJackU3LV()
     #daio = myArduino("/dev/ttyUSB0")
-    led = LEDD1B(daio, pwm_channel=5, name = "465 nm") 
+    led = LEDD1B(daio, pwm_channel=6, name = "465 nm") 
     led_widget = LEDWidget(led_drivers=[led])
 
     # Control DMD
@@ -42,7 +41,11 @@ if __name__ == "__main__":
     cam_mask = DrawPolyMaskOpto()
     dmd_mask = DrawPolyMaskOptoDMD(DMD_HEIGHT, DMD_WIDTH)
     twop_mask = DrawPolyMaskOpto()
-    masks = MaskManager([cam_mask, dmd_mask, twop_mask], ["Camera", "DMD", "Two Photon"], TRANSFORMATIONS)
+
+    transformations = np.tile(np.eye(3), (3,3,1,1))
+    transformations[0,1] = np.array([[3.05, -0.041, -441.7],[0.041, 3.07, 1455.99],[0, 0 ,1]])
+    transformations[1,0] = np.linalg.inv(transformations[0,1])
+    masks = MaskManager([cam_mask, dmd_mask, twop_mask], ["Camera", "DMD", "Two Photon"], transformations)
 
     # connect signals and slots
     dmd_mask.DMD_update.connect(dmd_widget.update_image)

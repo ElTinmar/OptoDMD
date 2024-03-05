@@ -34,10 +34,6 @@ def star(center: NDArray, n: int, theta: float, scale_0: int, scale_1: int) -> N
 
     return np.asarray(polygon, dtype=np.int32)
 
-def get_single_image(image: NDArray):
-    print(image.shape)
-    return
-    
 if __name__ == "__main__":
 
     DMD_HEIGHT = 2560
@@ -77,10 +73,13 @@ if __name__ == "__main__":
     # camera 
     #cam = XimeaCamera()
     cam = OpenCV_Webcam()
-    camera_controls = CameraControl(cam)
-    camera_controls.image_ready.connect(get_single_image)
-    camera_controls.show()
-    
+
+    input("Press Enter to grab frame...")
+    frame = cam.get_frame()
+
+    register = AlignAffine2D(calibration_pattern[:,:,0], frame.image[:,:,0])
+    register.show()
+
     app.exec()
 
     ## Camera to 2P
