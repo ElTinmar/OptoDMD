@@ -1,4 +1,4 @@
-from DrawMasks_2 import  MaskManager, DrawPolyMaskOpto, DrawPolyMaskOptoDMD
+from DrawMasks import  MaskManager, DrawPolyMaskOpto, DrawPolyMaskOptoDMD
 from DMD import DMD
 from camera_tools import CameraPreview, CameraControl, RandomCam, OpenCV_Webcam
 from PyQt5.QtWidgets import QApplication
