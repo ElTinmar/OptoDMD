@@ -67,10 +67,15 @@ class DrawPolyMask(QWidget):
         h, w = self.image.shape[:2]
         self.image_label.setFixedSize(w,h)
 
+        self.scroll_area = QScrollArea()
+        self.scroll_area.setWidget(self.image_label)
+        self.scroll_area.setWidgetResizable(True)
+        self.scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
+
     def layout_components(self):
 
         self.layout = QVBoxLayout(self)
-        self.layout.addWidget(self.image_label)
+        self.layout.addWidget(self.scroll_area)
         self.layout.addStretch()
         
        
@@ -259,6 +264,9 @@ class DrawPolyMaskOpto(DrawPolyMask):
         self.mask_drawn.emit(self.ID, key, whole_field)
 
 class DrawPolyMaskOptoDMD(DrawPolyMaskOpto):
+    '''
+    Derived class that emits the collection of visible masks 
+    '''
 
     DMD_update = pyqtSignal(np.ndarray)
 
@@ -268,7 +276,8 @@ class DrawPolyMaskOptoDMD(DrawPolyMaskOpto):
         super().__init__(image, *args, **kwargs)
     
     def paintEvent(self, event):
-        
+        # TODO emit only the collection of masks without underlying image? 
+
         super().paintEvent(event)
         self.DMD_update.emit(im2uint8(self.im_display))
 
