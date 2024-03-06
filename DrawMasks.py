@@ -70,13 +70,12 @@ class DrawPolyMask(QWidget):
         self.scroll_area = QScrollArea()
         self.scroll_area.setWidget(self.image_label)
         self.scroll_area.setWidgetResizable(True)
-        self.scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
 
     def layout_components(self):
 
         self.layout = QVBoxLayout(self)
         self.layout.addWidget(self.scroll_area)
-        self.layout.addStretch()
+        #self.layout.addStretch()
         
        
     def paintEvent(self, event):
