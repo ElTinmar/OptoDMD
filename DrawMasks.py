@@ -1,16 +1,112 @@
 import cv2
-from PyQt5.QtCore import pyqtSignal, pyqtSlot, Qt
-from PyQt5.QtWidgets import QLabel,  QWidget, QVBoxLayout, QHBoxLayout, QBoxLayout, QTabWidget, QScrollArea, QPushButton, QFrame, QLineEdit, QCheckBox
-from PyQt5.QtGui import QPainter, QColor, QPen
-from qt_widgets import NDarray_to_QPixmap
+from PyQt5.QtCore import pyqtSignal, Qt, QPointF, QLineF
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QBoxLayout, QTabWidget, QScrollArea, QPushButton, QFrame, QLineEdit, QCheckBox, QGraphicsLineItem
+from PyQt5.QtGui import QPainter, QPen
 import numpy as np
 from numpy.typing import NDArray
 from typing import Optional, List
-from image_tools import im2single, im2uint8
+from image_tools import im2single, im2uint8, ImageViewer
+from qt_widgets import NDarray_to_QPixmap
 
 # TODO handle better if image is RGB or grayscale
 # TODO images are updated only when clicking on the tab
 
+class DrawPolyMask(ImageViewer):
+
+    mask_drawn = pyqtSignal(int, int, np.ndarray)
+        
+    def __init__(self, image: np.ndarray, *args, **kwargs) -> None:
+
+        super().__init__(image, *args, **kwargs)
+
+        self.ID = -1
+        self.masks = {}
+        self.current_polygon = []
+        self.pen = QPen(Qt.red)
+        self.setMouseTracking(True)
+
+    def set_ID(self, ID: int):
+
+        self.ID = ID
+
+    def get_image_size(self):
+        
+        return self.image.shape[:2]
+
+    def mousePressEvent(self, event):
+
+        widget_pos = event.pos()
+        scene_pos = self.mapToScene(widget_pos)
+        
+        # left-click adds a new point to polygon
+        if event.button() == Qt.LeftButton:
+
+            self.current_polygon.append(scene_pos)
+
+            line = QLineF(scene_pos, scene_pos)
+            self.current_line = QGraphicsLineItem(line)
+            self.current_line.setPen(self.pen)
+            self.scene.addItem(self.current_line)
+
+            # remove point with shift pressed
+            if event.modifiers() == Qt.ShiftModifier:
+                pass
+            
+        # right-click closes polygon
+        if event.button() == Qt.RightButton:
+
+            if len(self.current_polygon) > 2:
+
+                # create key
+                mask_keys = self.masks.keys() or [0]
+                key = max(mask_keys) + 1
+
+                # close polygon
+                self.current_polygon.append(self.current_polygon[0])
+
+                # clear all lines
+                for item in self.scene.items():
+                    if isinstance(item, QGraphicsLineItem):
+                        self.scene.removeItem(item)
+
+                # store mask
+                coords = [[pt.x(), pt.y()] for pt in self.current_polygon]
+                coords = np.array(coords, dtype = np.int32)
+                mask = np.zeros_like(self.image, dtype=np.float32)
+                mask_RGB = cv2.fillPoly(mask, [coords], 255)
+                mask_gray = im2single(mask_RGB[:,:,0])
+                show_mask = True
+                self.masks[key] = (show_mask, mask_gray)
+
+                # reset current polygon
+                self.current_polygon = []
+
+                # send signal
+                self.mask_drawn.emit(self.ID, key, mask_gray)
+
+    def mouseMoveEvent(self, event):
+
+        widget_pos = event.pos()
+        scene_pos = self.mapToScene(widget_pos)
+
+        if len(self.current_polygon) >= 1:
+            line = self.current_line.line()
+            line.setP2(scene_pos)
+            self.current_line.setLine(line)
+        
+        self.im_display = im2single(self.image.copy())
+
+        # add masks 
+        for key, mask_tuple in self.masks.items():
+            show, mask = mask_tuple
+            if show:
+                self.im_display += np.dstack((mask,mask,mask))
+        self.im_display = np.clip(self.im_display,0,1)
+
+        # update image label
+        self.pixmap_item.setPixmap(NDarray_to_QPixmap(im2uint8(self.im_display)))
+
+'''
 class DrawPolyMask(QWidget):
     """
     Generic class to draw polygons on top of an image using the mouse.
@@ -146,7 +242,7 @@ class DrawPolyMask(QWidget):
 
         self.mouse_pos = event.pos()
         self.update()
-
+'''
 
 class DrawPolyMaskOpto(DrawPolyMask):
     """
@@ -156,6 +252,9 @@ class DrawPolyMaskOpto(DrawPolyMask):
 
     def __init__(self, image: Optional[NDArray] = None, *args, **kwargs):
     
+        if image is None:
+            image = np.zeros((512,512,3), np.uint8)
+
         super().__init__(image, *args, **kwargs)
 
     def create_components(self):
@@ -272,10 +371,10 @@ class DrawPolyMaskOptoDMD(DrawPolyMaskOpto):
         image = np.zeros((height, width, 3))
         super().__init__(image, *args, **kwargs)
     
-    def paintEvent(self, event):
+    def mouseMoveEvent(self, event):
         # TODO emit only the collection of masks without underlying image? 
 
-        super().paintEvent(event)
+        super().mouseMoveEvent(event)
         self.DMD_update.emit(im2uint8(self.im_display))
 
 class MaskItem(QWidget):
