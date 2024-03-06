@@ -17,10 +17,13 @@ class DrawPolyMask(ImageViewer):
         
     def __init__(self, image: np.ndarray, *args, **kwargs) -> None:
 
+        # super().__init__ calls modified set_image 
+        # this is not great
+        self.masks = {}
+
         super().__init__(image, *args, **kwargs)
 
         self.ID = -1
-        self.masks = {}
         self.current_polygon = []
         self.pen = QPen(Qt.red)
         self.setMouseTracking(True)
@@ -30,8 +33,8 @@ class DrawPolyMask(ImageViewer):
         self.ID = ID
 
     def set_image(self, image: np.ndarray):
-        
-        super.set_image(image)
+
+        super().set_image(image)
         self.update_pixmap()
         
     def update_pixmap(self):
@@ -384,12 +387,11 @@ class DrawPolyMaskOptoDMD(DrawPolyMaskOpto):
 
         image = np.zeros((height, width, 3))
         super().__init__(image, *args, **kwargs)
-    
-    def mouseMoveEvent(self, event):
-        # TODO emit only the collection of masks without underlying image? 
 
-        super().mouseMoveEvent(event)
+    def update_pixmap(self):
+        super().update_pixmap()
         self.DMD_update.emit(im2uint8(self.im_display))
+        
 
 class MaskItem(QWidget):
 
@@ -504,7 +506,6 @@ class MaskManager(QWidget):
         self.frame_layout.addStretch()
         self.frame_layout.setContentsMargins(0,0,0,0)
         self.frame_layout.setSpacing(0)
-        self.frame_layout.setDirection(QBoxLayout.BottomToTop)
 
         mask_controls = QVBoxLayout()
         mask_controls.addLayout(mask_buttons_layout)
@@ -537,7 +538,7 @@ class MaskManager(QWidget):
         widget.showClicked.connect(self.on_mask_visibility)
         widget.deletePressed.connect(self.on_delete_mask)
         self.mask_widgets[key] = widget
-        self.frame_layout.addWidget(widget)
+        self.frame_layout.insertWidget(self.frame_layout.count()-1, widget)
 
     def on_delete_mask(self, key: int):
 
