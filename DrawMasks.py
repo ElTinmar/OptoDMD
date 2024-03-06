@@ -331,5 +331,5 @@ class MaskManager(QWidget):
             widget = MaskItem(1, "flat")
             widget.showClicked.connect(self.on_mask_visibility)
             widget.deletePressed.connect(self.on_delete_mask)
-            self.frame_layout.addWidget(widget)
+            self.frame_layout.insertWidget(self.frame_layout.count()-1, widget)
             self.mask_widgets[1] = widget
