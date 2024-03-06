@@ -29,6 +29,25 @@ class DrawPolyMask(ImageViewer):
 
         self.ID = ID
 
+    def set_image(self, image: np.ndarray):
+        
+        super.set_image(image)
+        self.update_pixmap()
+        
+    def update_pixmap(self):
+
+        self.im_display = im2single(self.image.copy())
+
+        # add masks 
+        for key, mask_tuple in self.masks.items():
+            show, mask = mask_tuple
+            if show:
+                self.im_display += np.dstack((mask,mask,mask))
+        self.im_display = np.clip(self.im_display,0,1)
+
+        # update image label
+        self.pixmap_item.setPixmap(NDarray_to_QPixmap(im2uint8(self.im_display)))
+    
     def get_image_size(self):
         
         return self.image.shape[:2]
@@ -81,6 +100,8 @@ class DrawPolyMask(ImageViewer):
                 # reset current polygon
                 self.current_polygon = []
 
+                self.update_pixmap()
+
                 # send signal
                 self.mask_drawn.emit(self.ID, key, mask_gray)
 
@@ -94,17 +115,6 @@ class DrawPolyMask(ImageViewer):
             line.setP2(scene_pos)
             self.current_line.setLine(line)
         
-        self.im_display = im2single(self.image.copy())
-
-        # add masks 
-        for key, mask_tuple in self.masks.items():
-            show, mask = mask_tuple
-            if show:
-                self.im_display += np.dstack((mask,mask,mask))
-        self.im_display = np.clip(self.im_display,0,1)
-
-        # update image label
-        self.pixmap_item.setPixmap(NDarray_to_QPixmap(im2uint8(self.im_display)))
 
 '''
 class DrawPolyMask(QWidget):
@@ -289,19 +299,19 @@ class DrawPolyMaskOpto(DrawPolyMask):
             show_mask = True
             self.masks[key] = (show_mask, mask)
 
-        self.update()
+        self.update_pixmap()
 
     def on_mask_delete(self, key: int):
 
         # remove mask from storage
         self.masks.pop(key)
-        self.update()
+        self.update_pixmap()
 
     def on_mask_clear(self):
 
         # remove mask from storage
         self.masks = {}
-        self.update()
+        self.update_pixmap()
 
     def on_mask_flatten(self):
         
@@ -317,13 +327,13 @@ class DrawPolyMaskOpto(DrawPolyMask):
         self.masks[1] = (True, flat)
 
         # update display
-        self.update()
+        self.update_pixmap()
 
     def on_mask_visibility(self, key: int, visibility: bool):
 
         _, mask = self.masks[key]
         self.masks[key] = (visibility, mask)
-        self.update()
+        self.update_pixmap()
 
     def create_checkerboard(self):
         
@@ -341,6 +351,8 @@ class DrawPolyMaskOpto(DrawPolyMask):
         # update masks
         self.masks[key] = (True, checkerboard)
 
+        self.update_pixmap()
+
         # send signal
         self.mask_drawn.emit(self.ID, key, checkerboard)
     
@@ -355,6 +367,8 @@ class DrawPolyMaskOpto(DrawPolyMask):
 
         # update masks
         self.masks[key] = (True, whole_field)
+
+        self.update_pixmap()
 
         # send signal
         self.mask_drawn.emit(self.ID, key, whole_field)

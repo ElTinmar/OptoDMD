@@ -23,14 +23,14 @@ if __name__ == "__main__":
     # Communication with ScanImage
     twop_sender = ImageSender(ZMQ_ADDRESS)
     
-    '''
+
     # Camera 
     #cam = XimeaCamera()
     cam = OpenCV_Webcam()
     camera_controls = CameraControl(cam)
     camera_controls.show()
 
-    
+    '''
     # Control LEDs
     daio = LabJackU3LV()
     #daio = myArduino("/dev/ttyUSB0")
@@ -55,7 +55,7 @@ if __name__ == "__main__":
 
     # connect signals and slots
     dmd_mask.DMD_update.connect(dmd_widget.update_image)
-    #camera_controls.image_ready.connect(cam_mask.set_image)
+    camera_controls.image_ready.connect(cam_mask.set_image)
     twop_sender.signal.image_ready.connect(twop_mask.set_image)
 
     app.exec()
