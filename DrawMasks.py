@@ -74,9 +74,7 @@ class DrawPolyMask(QWidget):
     def layout_components(self):
 
         self.layout = QVBoxLayout(self)
-        self.layout.addWidget(self.scroll_area)
-        #self.layout.addStretch()
-        
+        self.layout.addWidget(self.scroll_area)        
        
     def paintEvent(self, event):
         
