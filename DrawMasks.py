@@ -7,22 +7,48 @@ from typing import Optional, List
 from image_tools import im2uint8, im2rgb, DrawPolyMask
 from qt_widgets import LabeledSpinBox
 
-class DrawPolyMaskOpto(DrawPolyMask):
+class DrawPolyMaskOpto(QWidget):
     """
     Derived class implementing slots to receive, delete, clear, flatten,
     or hide masks
     """
 
-    def __init__(self, image: Optional[NDArray] = None, *args, **kwargs):
-    
-        if image is None:
-            image = np.zeros((512,512,3), np.uint8)
+    mask_drawn = pyqtSignal(int, int, np.ndarray)
 
-        super().__init__(image, *args, **kwargs)
+    def __init__(self, drawer: DrawPolyMask, *args, **kwargs):
+    
+        super().__init__(*args, **kwargs)
+
+        self.drawer = drawer
+        self.drawer.mask_drawn.connect(self.mask_drawn)
+        self.create_components()
+        self.layout_components()
+
+    def get_ID(self):
+        return self.drawer.get_ID()
+
+    def set_ID(self, ID: int):
+        self.drawer.set_ID(ID)
+
+    def get_masks(self):
+        return self.drawer.get_masks()
+    
+    def set_masks(self, masks: dict):
+        return self.drawer.set_masks(masks)
+
+    def get_image(self):
+        return self.drawer.get_image()
+
+    def set_image(self, image: np.ndarray):
+        self.drawer.set_image(image)
+
+    def update_pixmap(self):
+        self.drawer.update_pixmap()
+
+    def get_image_size(self):
+        return self.drawer.get_image_size()
 
     def create_components(self):
-
-        super().create_components()
 
         # special masks
         self.checkerboard = QPushButton(self)
@@ -35,96 +61,108 @@ class DrawPolyMaskOpto(DrawPolyMask):
 
     def layout_components(self):
 
-        super().layout_components()
-
         draw_buttons_layout = QHBoxLayout()
         draw_buttons_layout.addWidget(self.checkerboard)
         draw_buttons_layout.addWidget(self.whole_field)
         draw_buttons_layout.addStretch()
 
-        self.layout.insertLayout(0, draw_buttons_layout)
+        layout = QVBoxLayout(self)
+        layout.addLayout(draw_buttons_layout)
+        layout.addWidget(self.drawer)
 
     def on_mask_receive(self, recipient: int, key: int, mask: NDArray):
          
-        if recipient == self.ID:
+        if recipient == self.get_ID():
 
             # store mask
             show_mask = True
-            self.masks[key] = (show_mask, mask)
+            masks = self.get_masks()
+            masks[key] = (show_mask, mask)
+            self.set_masks(masks)
 
         self.update_pixmap()
 
     def on_mask_delete(self, key: int):
 
         # remove mask from storage
-        self.masks.pop(key)
+        masks = self.get_masks()
+        masks.pop(key)
+        self.set_masks(masks)
         self.update_pixmap()
 
     def on_mask_clear(self):
 
         # remove mask from storage
-        self.masks = {}
+        self.set_masks({})
         self.update_pixmap()
 
     def on_mask_flatten(self):
         
         # flatten masks
-        flat = np.zeros(self.image.shape[:2], dtype=np.float32)
-        for key, mask_tuple in self.masks.items():
+        flat = np.zeros(self.get_image_size(), dtype=np.float32)
+        masks = self.get_masks()
+        for key, mask_tuple in masks.items():
             mask = mask_tuple[1]
             flat += mask
         flat = np.clip(flat,0,1)
 
         # store flat mask
-        self.masks = {}
-        self.masks[1] = (True, flat)
+        masks = {}
+        masks[1] = (True, flat)
+        self.set_masks(masks)
 
         # update display
         self.update_pixmap()
 
     def on_mask_visibility(self, key: int, visibility: bool):
 
-        _, mask = self.masks[key]
-        self.masks[key] = (visibility, mask)
+        masks = self.get_masks()
+        _, mask = masks[key]
+        masks[key] = (visibility, mask)
+        self.set_masks(masks)
         self.update_pixmap()
 
     def create_checkerboard(self):
         
         # create key
-        mask_keys = self.masks.keys() or [0]
+        masks = self.get_masks()
+        mask_keys = masks.keys() or [0]
         key = max(mask_keys) + 1
 
         # create checkerboard (8 cells in smallest dimension)
-        h, w = self.image.shape[:2]
+        h, w = self.get_image_size()
         num_pixels = min(w,h) // 8
         xv, yv = np.meshgrid(range(w), range(h), indexing='xy')
         checkerboard = ((xv // num_pixels) + (yv // num_pixels)) % 2
         checkerboard = checkerboard.astype(np.float32)
 
         # update masks
-        self.masks[key] = (True, checkerboard)
+        masks[key] = (True, checkerboard)
+        self.set_masks(masks)
 
         self.update_pixmap()
 
         # send signal
-        self.mask_drawn.emit(self.ID, key, checkerboard)
+        self.mask_drawn.emit(self.get_ID(), key, checkerboard)
     
     def create_whole_field(self):
 
         # create key
-        mask_keys = self.masks.keys() or [0]
+        masks = self.get_masks()
+        mask_keys = masks.keys() or [0]
         key = max(mask_keys) + 1
         
         # create whole field
-        whole_field = np.ones(self.image.shape[:2], dtype=np.float32)
+        whole_field = np.ones(self.get_image_size(), dtype=np.float32)
 
         # update masks
-        self.masks[key] = (True, whole_field)
+        masks[key] = (True, whole_field)
+        self.set_masks(masks)
 
         self.update_pixmap()
 
         # send signal
-        self.mask_drawn.emit(self.ID, key, whole_field)
+        self.mask_drawn.emit(self.get_ID(), key, whole_field)
 
 class DrawPolyMaskOptoDMD(DrawPolyMaskOpto):
     '''
@@ -133,21 +171,17 @@ class DrawPolyMaskOptoDMD(DrawPolyMaskOpto):
 
     DMD_update = pyqtSignal(np.ndarray)
 
-    def __init__(self, height: int, width: int, *args, **kwargs):
-
-        image = np.zeros((height, width, 3))
-        super().__init__(image, *args, **kwargs)
-
     def update_pixmap(self):
         super().update_pixmap()
         #self.DMD_update.emit(im2uint8(self.im_display))
 
     def expose(self, key: int):
-        visible, mask = self.masks[key]
+        masks = self.get_masks()
+        visible, mask = masks[key]
         self.DMD_update.emit(mask)
         
     def clear(self):
-        black = np.zeros_like(self.image, np.uint8)
+        black = np.zeros(self.get_image_size(), np.uint8)
         self.DMD_update.emit(black)
 
 class MaskItem(QWidget):
@@ -219,7 +253,7 @@ class MaskManager(QWidget):
 
     def __init__(
         self,
-        mask_drawers: List[DrawPolyMask],
+        mask_drawers: List[DrawPolyMaskOpto],
         mask_drawer_names: List[str],
         transformations: NDArray, 
         *args, **kwargs

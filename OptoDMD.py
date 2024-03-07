@@ -8,6 +8,7 @@ from camera_tools import CameraControl, OpenCV_Webcam
 from PyQt5.QtWidgets import QApplication
 import sys
 import numpy as np
+from image_tools import DrawPolyMask
 
 if __name__ == "__main__":
 
@@ -47,9 +48,13 @@ if __name__ == "__main__":
     dmd_widget = DMD(screen_num=SCREEN_DMD)
 
     # Masks
-    cam_mask = DrawPolyMaskOpto()
-    dmd_mask = DrawPolyMaskOptoDMD(DMD_HEIGHT, DMD_WIDTH)
-    twop_mask = DrawPolyMaskOpto()
+    cam_drawer = DrawPolyMask(np.zeros((512,512)))
+    dmd_drawer = DrawPolyMask(np.zeros((DMD_HEIGHT,DMD_WIDTH)))
+    twop_drawer = DrawPolyMask(np.zeros((512,512)))
+
+    cam_mask = DrawPolyMaskOpto(cam_drawer)
+    dmd_mask = DrawPolyMaskOptoDMD(dmd_drawer)
+    twop_mask = DrawPolyMaskOpto(twop_drawer)
 
     transformations = np.tile(np.eye(3), (3,3,1,1))
     transformations[0,1] = calibration_cam_to_dmd
@@ -65,3 +70,5 @@ if __name__ == "__main__":
     twop_sender.signal.image_ready.connect(twop_mask.set_image)
 
     app.exec()
+
+    twop_sender.stop()
