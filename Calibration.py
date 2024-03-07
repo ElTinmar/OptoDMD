@@ -44,7 +44,7 @@ if __name__ == "__main__":
     
     ## DMD to camera
 
-    # 1. Project a pattern onto a slide, and image the slide on the camera
+    # Project a pattern onto a slide, and image the slide on the camera
 
     pattern = create_calibration_pattern(5, DMD_HEIGHT, DMD_WIDTH)
 
@@ -59,21 +59,30 @@ if __name__ == "__main__":
     cam = OpenCV_Webcam(-1)
     input("Press Enter to grab frame...")
     frame = cam.get_frame()
-    cam.close()
 
     register = AlignAffine2D(pattern, frame.image)
     register.show()
-
-    app.exec()
 
     with open('cam2dmd.npy', 'wb') as f:
         np.save(f, register.affine_transform)
 
     ## Camera to 2P
-
-    cam = OpenCV_Webcam(-1)
-    input("Press Enter to grab frame...")
-    frame = cam.get_frame()
-    cam.close()
-
     
+    # put a slide with some structure under the microscope
+    # show some light and take an epifluorescence image with the camera
+    # you can use the DMD to expose the image
+        
+    dmd_widget.update_image(255*np.ones((DMD_HEIGHT,DMD_WIDTH,3), np.uint8))
+
+    frame = cam.get_frame()
+
+    zoom = np.linspace(1,10,5)
+    for z in zoom:
+        # send zoom value to scanimage, and acquire frames
+        # for each frame do the control point registration
+
+        twop_image = microscope.get_image()
+        register = AlignAffine2D(twop_image, frame.image)
+        register.show()
+    
+    app.exec()
