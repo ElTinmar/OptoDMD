@@ -1,5 +1,6 @@
 toy_data/
 *.jar
+*.npy
 
 # logs
 *.log
