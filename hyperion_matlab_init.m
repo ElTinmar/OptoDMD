@@ -1,6 +1,3 @@
-% pathdef.m is admin only, workaround
-restoredefaultpath; matlabrc
-
 scanimage_folder='C:\Program Files\Vidrio\SI-Premium_2020.1.2_(2021-02-09)_bd806fcff6';
 optoDMD_folder='P:\Code\OptoDMD-main';
 zeromq_jar_path = 'P:\Code\OptoDMD-main\jeromq-0.6.0.jar';
