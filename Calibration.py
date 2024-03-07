@@ -70,19 +70,36 @@ if __name__ == "__main__":
     
     # put a slide with some structure under the microscope
     # show some light and take an epifluorescence image with the camera
-    # you can use the DMD to expose the image
-        
+    # The slide should be ideally very thin and auto-fluorescent
+    
+    # use the DMD to expose the image
     dmd_widget.update_image(255*np.ones((DMD_HEIGHT,DMD_WIDTH,3), np.uint8))
-
     frame = cam.get_frame()
 
-    zoom = np.linspace(1,10,5)
-    for z in zoom:
-        # send zoom value to scanimage, and acquire frames
+    # Then take picture from the same sample with the two photon microscope
+    N = 5 
+    zoom = np.linspace(1,10,N)
+    T = np.zeros(3,3,N)
+    for idx, z in enumerate(zoom):
+        # send zoom value to scanimage over zeromq, and acquire frames
         # for each frame do the control point registration
-
-        twop_image = microscope.get_image()
+        twop_image = microscope.get_image() # TODO
         register = AlignAffine2D(twop_image, frame.image)
         register.show()
-    
+        T[:,:,idx] = register.affine_transform
+
+    # TODO maybe plot calibration with matplotlib 
+    A = np.vstack([zoom, np.ones(len(zoom))]).T # add intercept 
+    M = np.zeros(3,3,2)
+    for i in range(3):
+        for j in range(3):
+            M[i,j,:] = np.linalg.lstsq(A, T[i,j,:], rcond=None)[0]
+
+    with open('cam2twop.npy', 'wb') as f:
+        np.save(f, M)
+
+    # to get the transformation matrix for a given zoom level
+    def tform(zoom: float, M: NDArray):
+        return zoom*M[:,:,0] + M[:,:,1]
+
     app.exec()
