@@ -12,44 +12,15 @@ import numpy as np
 from typing import Tuple
 from numpy.typing import NDArray
 import cv2
+from image_tools import regular_polygon, star
 
-def regular_polygon(center: NDArray, n: int, theta: float, scale: int) -> NDArray:
+def create_calibration_pattern(div: int, height: int, width: int) -> NDArray:
     
-    polygon = []
-    angle_increment = 2*np.pi/n
-    for i in range(n):
-        alpha = theta+i*angle_increment
-        x, y = np.cos(alpha), np.sin(alpha)
-        new_point = center + scale * np.array([x, y])
-        polygon.append(new_point)
-    
-    return np.asarray(polygon, dtype=np.int32)
+    step = min(height,width)//div
+    calibration_pattern = np.zeros((height,width,3), np.uint8)
 
-def star(center: NDArray, n: int, theta: float, scale_0: int, scale_1: int) -> NDArray:
-    
-    angle_increment = 2*np.pi/n
-    polygon_out = regular_polygon(center, n, theta, scale_1)
-    polygon_in = regular_polygon(center, n, theta+angle_increment/2, scale_0)
-    polygon = [val for pair in zip(polygon_out, polygon_in) for val in pair]
-
-    return np.asarray(polygon, dtype=np.int32)
-
-if __name__ == "__main__":
-
-    DMD_HEIGHT = 2560
-    DMD_WIDTH = 1440
-    SCREEN_DMD = 2
-    
-    ## DMD to camera
-
-    # 1. Project a pattern onto a slide, and image the slide on the camera
-
-    div = 5
-    step = min(DMD_HEIGHT,DMD_WIDTH)//div
-
-    calibration_pattern = np.zeros((DMD_HEIGHT,DMD_WIDTH,3), np.uint8)
-    for y in range(DMD_HEIGHT//(2*div),DMD_HEIGHT,step):
-        for x in range(DMD_WIDTH//(2*div),DMD_WIDTH,step):
+    for y in range(height//(2*div),height,step):
+        for x in range(width//(2*div),width,step):
 
             n = np.random.randint(3,7)
             s = np.random.randint(step//4, step//2)
@@ -62,24 +33,47 @@ if __name__ == "__main__":
                 poly = star(pos,n,theta,s//2,s)
 
             calibration_pattern = cv2.fillPoly(calibration_pattern, pts=[poly], color=(255, 255, 255))
+    
+    return calibration_pattern
 
+if __name__ == "__main__":
+
+    SCREEN_DMD = 1
+    DMD_HEIGHT = 1920
+    DMD_WIDTH = 1080
+    
+    ## DMD to camera
+
+    # 1. Project a pattern onto a slide, and image the slide on the camera
+
+    pattern = create_calibration_pattern(5, DMD_HEIGHT, DMD_WIDTH)
 
     app = QApplication(sys.argv)
 
     # projector
     dmd_widget = DMD(screen_num=SCREEN_DMD)
-    dmd_widget.update_image(calibration_pattern)
+    dmd_widget.update_image(pattern)
 
     # camera 
     #cam = XimeaCamera()
-    cam = OpenCV_Webcam()
-
+    cam = OpenCV_Webcam(-1)
     input("Press Enter to grab frame...")
     frame = cam.get_frame()
+    cam.close()
 
-    register = AlignAffine2D(calibration_pattern[:,:,0], frame.image[:,:,0])
+    register = AlignAffine2D(pattern, frame.image)
     register.show()
 
     app.exec()
 
+    with open('cam2dmd.npy', 'wb') as f:
+        np.save(f, register.affine_transform)
+
     ## Camera to 2P
+
+    cam = OpenCV_Webcam(-1)
+    input("Press Enter to grab frame...")
+    frame = cam.get_frame()
+    cam.close()
+
+    

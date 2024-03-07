@@ -17,6 +17,10 @@ if __name__ == "__main__":
     SCREEN_DMD = 1
     DMD_HEIGHT = 1920
     DMD_WIDTH = 1080
+    CAM2DMD = "cam2dmd.npy"
+
+    with open(CAM2DMD, 'rb') as f:
+        calibration_cam_to_dmd = np.load(f)
 
     app = QApplication(sys.argv)
 
@@ -26,7 +30,7 @@ if __name__ == "__main__":
 
     # Camera 
     #cam = XimeaCamera()
-    cam = OpenCV_Webcam()
+    cam = OpenCV_Webcam(-1)
     camera_controls = CameraControl(cam)
     camera_controls.show()
 
@@ -48,8 +52,8 @@ if __name__ == "__main__":
     twop_mask = DrawPolyMaskOpto()
 
     transformations = np.tile(np.eye(3), (3,3,1,1))
-    transformations[0,1] = np.array([[3.05, -0.041, -441.7],[0.041, 3.07, 1455.99],[0, 0 ,1]])
-    transformations[1,0] = np.linalg.inv(transformations[0,1])
+    transformations[0,1] = calibration_cam_to_dmd
+    transformations[1,0] = np.linalg.inv(calibration_cam_to_dmd)
     masks = MaskManager([cam_mask, dmd_mask, twop_mask], ["Camera", "DMD", "Two Photon"], transformations)
     masks.show()
 
