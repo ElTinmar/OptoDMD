@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QTabWidget, QScro
 import numpy as np
 from numpy.typing import NDArray
 from typing import Optional, List
-from image_tools import im2uint8, DrawPolyMask
+from image_tools import im2uint8, im2rgb, DrawPolyMask
 
 class DrawPolyMaskOpto(DrawPolyMask):
     """
@@ -140,7 +140,15 @@ class DrawPolyMaskOptoDMD(DrawPolyMaskOpto):
     def update_pixmap(self):
         super().update_pixmap()
         self.DMD_update.emit(im2uint8(self.im_display))
+
+    def expose(self, key: int):
+        visible, mask = self.masks[key]
+        mask_RGB = im2rgb(im2uint8(mask))
+        self.DMD_update.emit(mask_RGB)
         
+    def clear(self):
+        black = np.zeros_like(self.image, np.uint8)
+        self.DMD_update.emit(black)
 
 class MaskItem(QWidget):
 
