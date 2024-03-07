@@ -59,13 +59,17 @@ if __name__ == "__main__":
     cam = OpenCV_Webcam(-1)
     input("Press Enter to grab frame...")
     frame = cam.get_frame()
+    dmd_widget.close()
 
     register = AlignAffine2D(pattern, frame.image)
     register.show()
 
+    app.exec()
+
     with open('cam2dmd.npy', 'wb') as f:
         np.save(f, register.affine_transform)
 
+    '''
     ## Camera to 2P
     
     # put a slide with some structure under the microscope
@@ -102,4 +106,5 @@ if __name__ == "__main__":
     def tform(zoom: float, M: NDArray):
         return zoom*M[:,:,0] + M[:,:,1]
 
-    app.exec()
+    
+    '''
