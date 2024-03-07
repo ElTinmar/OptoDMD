@@ -5,6 +5,7 @@ import numpy as np
 from numpy.typing import NDArray
 from typing import Optional, List
 from image_tools import im2uint8, im2rgb, DrawPolyMask
+from qt_widgets import LabeledSpinBox
 
 class DrawPolyMaskOpto(DrawPolyMask):
     """
@@ -139,12 +140,11 @@ class DrawPolyMaskOptoDMD(DrawPolyMaskOpto):
 
     def update_pixmap(self):
         super().update_pixmap()
-        self.DMD_update.emit(im2uint8(self.im_display))
+        #self.DMD_update.emit(im2uint8(self.im_display))
 
     def expose(self, key: int):
         visible, mask = self.masks[key]
-        mask_RGB = im2rgb(im2uint8(mask))
-        self.DMD_update.emit(mask_RGB)
+        self.DMD_update.emit(mask)
         
     def clear(self):
         black = np.zeros_like(self.image, np.uint8)
@@ -154,6 +154,7 @@ class MaskItem(QWidget):
 
     showClicked = pyqtSignal(int,int)
     deletePressed = pyqtSignal(int)
+    maskExpose = pyqtSignal(int)
 
     def __init__(self, mask_index: int, name: Optional[str] = "name", *args, **kwargs):
 
@@ -178,12 +179,18 @@ class MaskItem(QWidget):
         self.delete.setMaximumWidth(25)
         self.delete.pressed.connect(self.delete_clicked)
 
+        self.expose = QPushButton(self)
+        self.expose.setText('Expose')
+        self.expose.setMaximumWidth(75)
+        self.expose.pressed.connect(self.expose_clicked)
+
     def layout_components(self):
         
         layout = QHBoxLayout(self)
         layout.addWidget(self.show)
         layout.addWidget(self.name_label)
         layout.addWidget(self.delete)
+        layout.addWidget(self.expose)
         layout.setContentsMargins(0,0,0,0)
         layout.setSpacing(0)
     
@@ -197,6 +204,9 @@ class MaskItem(QWidget):
     def delete_clicked(self):
         self.deletePressed.emit(self.mask_index)
 
+    def expose_clicked(self):
+        self.maskExpose.emit(self.mask_index)
+
 class MaskManager(QWidget):
     
     send_mask = pyqtSignal(int, int, np.ndarray)
@@ -204,6 +214,8 @@ class MaskManager(QWidget):
     flatten_mask = pyqtSignal()
     clear_mask = pyqtSignal()
     mask_visibility = pyqtSignal(int, int)
+    mask_expose = pyqtSignal(int)
+    clear_dmd = pyqtSignal()
 
     def __init__(
         self,
@@ -253,6 +265,12 @@ class MaskManager(QWidget):
         self.scroll_area.setWidgetResizable(True)
         self.scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
 
+        # clear dmd 
+        self.clear_dmd_button = QPushButton(self)
+        self.clear_dmd_button.setText('clear DMD')
+        self.clear_dmd_button.clicked.connect(self.clear_dmd)
+
+
     def layout_components(self):
 
         mask_buttons_layout = QHBoxLayout()
@@ -267,6 +285,7 @@ class MaskManager(QWidget):
         mask_controls = QVBoxLayout()
         mask_controls.addLayout(mask_buttons_layout)
         mask_controls.addWidget(self.scroll_area)
+        mask_controls.addWidget(self.clear_dmd_button)
 
         tabs = QTabWidget()
         for drawer, name in zip(self.mask_drawers, self.mask_drawer_names):
@@ -294,6 +313,7 @@ class MaskManager(QWidget):
         widget = MaskItem(key, str(key))
         widget.showClicked.connect(self.on_mask_visibility)
         widget.deletePressed.connect(self.on_delete_mask)
+        widget.maskExpose.connect(self.on_mask_expose)
         self.mask_widgets[key] = widget
         self.frame_layout.insertWidget(self.frame_layout.count()-1, widget)
 
@@ -306,6 +326,9 @@ class MaskManager(QWidget):
 
         # propagate to connected widgets
         self.delete_mask.emit(key)
+
+    def on_mask_expose(self, key: int):
+        self.mask_expose.emit(key)
 
     def on_mask_visibility(self, key: int, visibility: bool):
 
@@ -339,5 +362,7 @@ class MaskManager(QWidget):
             widget = MaskItem(1, "flat")
             widget.showClicked.connect(self.on_mask_visibility)
             widget.deletePressed.connect(self.on_delete_mask)
+            widget.maskExpose.connect(self.on_mask_expose)
             self.frame_layout.insertWidget(self.frame_layout.count()-1, widget)
             self.mask_widgets[1] = widget
+

@@ -4,6 +4,7 @@ from PyQt5.QtGui import QColor, QPixmap
 from numpy.typing import NDArray
 import numpy as np
 from qt_widgets import NDarray_to_QPixmap
+from image_tools import im2rgb, im2uint8
 
 class DMD(QWidget):
 
@@ -39,6 +40,7 @@ class DMD(QWidget):
 
     @pyqtSlot(np.ndarray)
     def update_image(self, image: NDArray=None):
+        image = im2rgb(im2uint8(image))
         self.img_label.setPixmap(NDarray_to_QPixmap(image))     
 
 class ImageSender(QWidget):

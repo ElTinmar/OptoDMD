@@ -59,6 +59,8 @@ if __name__ == "__main__":
 
     # connect signals and slots
     dmd_mask.DMD_update.connect(dmd_widget.update_image)
+    masks.mask_expose.connect(dmd_mask.expose)
+    masks.clear_dmd.connect(dmd_mask.clear)
     camera_controls.image_ready.connect(cam_mask.set_image)
     twop_sender.signal.image_ready.connect(twop_mask.set_image)
 
