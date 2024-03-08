@@ -1,4 +1,4 @@
-from Microscope import ImageSender
+from Microscope import ImageSender, ScanImage
 from DrawMasks import  MaskManager, DrawPolyMaskOpto, DrawPolyMaskOptoDMD
 from daq import LabJackU3LV, myArduino
 from LED import LEDD1B, LEDWidget
@@ -12,12 +12,17 @@ from image_tools import DrawPolyMask
 
 if __name__ == "__main__":
 
-    O1_263 = "192.168.236.75"
-    PORT = "5555"
-    ZMQ_ADDRESS= "tcp://" + O1_263 + ":" + PORT
+    # zmq settings
+    PROTOCOL = "tcp://"
+    HOST = "192.168.236.75"
+    PORT = 5555
+    
+    # dmd settings
     SCREEN_DMD = 1
     DMD_HEIGHT = 1920
     DMD_WIDTH = 1080
+
+    # calibration files
     CAM2DMD = "cam2dmd.npy"
 
     with open(CAM2DMD, 'rb') as f:
@@ -26,8 +31,8 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
 
     # Communication with ScanImage
-    twop_sender = ImageSender(ZMQ_ADDRESS)
-    
+    scan_image = ScanImage(PROTOCOL, HOST, PORT)
+    twop_sender = ImageSender(scan_image)
 
     # Camera 
     #cam = XimeaCamera()

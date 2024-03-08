@@ -13,19 +13,21 @@ def deserialize(message: str) -> NDArray:
 
 class ScanImage:
 
+    # TODO scanimage should also transmit zoom value with images
+
     def __init__(self, protocol: str, host: str, port: int) -> None:
 
         self.context = zmq.Context()
 
         # get images from scanimage
-        address_image = protocol + host + str(port)
+        address_image = protocol + host + ":" + str(port)
         self.socket_image = self.context.socket(zmq.PULL)
         self.socket_image.connect(address_image)
 
         # send commands to scanimage 
-        address_control = protocol + host + str(port + 1)
+        address_control = protocol + host + ":" + str(port + 1)
         self.socket_control = self.context.socket(zmq.PUSH)
-        self.socket_control.bind(address_control)
+        self.socket_control.connect(address_control)
     
     def get_image(self) -> NDArray:
 

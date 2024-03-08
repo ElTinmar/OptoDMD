@@ -1,4 +1,4 @@
-from Microscope import ImageSender
+from Microscope import ImageSender, ScanImage
 from DrawMasks import  MaskManager, DrawPolyMaskOpto, DrawPolyMaskOptoDMD
 from daq import LabJackU3LV, myArduino
 from LED import LEDD1B, LEDWidget
@@ -72,6 +72,13 @@ if __name__ == "__main__":
     '''
     ## Camera to 2P
     
+    # zmq settings
+    PROTOCOL = "tcp://"
+    HOST = "192.168.236.75"
+    PORT = 5555
+    scan_image = ScanImage(PROTOCOL, HOST, PORT)
+
+    
     # put a slide with some structure under the microscope
     # show some light and take an epifluorescence image with the camera
     # The slide should be ideally very thin and auto-fluorescent
@@ -87,7 +94,8 @@ if __name__ == "__main__":
     for idx, z in enumerate(zoom):
         # send zoom value to scanimage over zeromq, and acquire frames
         # for each frame do the control point registration
-        twop_image = microscope.get_image() # TODO
+        scan_image.set_zoom(z)
+        twop_image = scan_image.get_image() 
         register = AlignAffine2D(twop_image, frame.image)
         register.show()
         T[:,:,idx] = register.affine_transform
