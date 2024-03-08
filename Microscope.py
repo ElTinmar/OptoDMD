@@ -4,6 +4,7 @@ from numpy.typing import NDArray
 from PyQt5.QtCore import pyqtSignal, pyqtSlot, QRunnable, QThreadPool, QObject
 from PyQt5.QtWidgets import QLabel,  QWidget
 from qt_widgets import NDarray_to_QPixmap
+from image_tools import im2uint8
 
 def deserialize(message: str) -> NDArray:
     '''deserialize string into numpy array'''
@@ -37,7 +38,7 @@ class ScanImage(QObject):
         return image
     
     def set_zoom(self, zoom: float) -> None:
-        
+
         # TODO check range
         self.socket_control.send(zoom)
 
@@ -75,7 +76,7 @@ class TwoPhoton(QWidget):
 
     @pyqtSlot(np.ndarray)
     def display(self, image: NDArray):
-        image = (255*image).astype(np.uint8)
+        image = im2uint8(image)
         self.twop_image.setPixmap(NDarray_to_QPixmap(image))
         self.update()
 
