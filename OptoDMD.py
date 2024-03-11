@@ -14,7 +14,7 @@ if __name__ == "__main__":
 
     # zmq settings
     PROTOCOL = "tcp://"
-    HOST = "192.168.236.75"
+    HOST = "o1-317"
     PORT = 5555
     
     # dmd settings
