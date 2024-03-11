@@ -10,7 +10,6 @@ dependencies:
 - pyfirmata
 - pyzmq
 - opencv
-- ocl-icd-system
 - pip:
   - git+https://github.com/ElTinmar/qt_widgets.git@main
   - git+https://github.com/ElTinmar/camera_tools.git@main
