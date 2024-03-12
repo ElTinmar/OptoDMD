@@ -17,7 +17,9 @@ class ScanImage(QObject):
     zoom_changed = pyqtSignal(float) # TODO send zoom value along with image ?
     image_ready = pyqtSignal(np.ndarray)
 
-    def __init__(self, protocol: str, host: str, port: int) -> None:
+    def __init__(self, protocol: str, host: str, port: int, *args, **kwargs) -> None:
+
+        super().__init__(*args, **kwargs)
 
         self.context = zmq.Context()
 
@@ -66,7 +68,7 @@ class TwoPhoton(QWidget):
         super().__init__(*args, **kwargs)
 
         self.sender = sender
-        self.sender.signal.image_ready.connect(self.display)
+        self.sender.scan_image.image_ready.connect(self.display)
         self.thread_pool = QThreadPool()
         self.thread_pool.start(sender)
 
