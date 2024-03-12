@@ -3,7 +3,7 @@ from DrawMasks import  MaskManager, DrawPolyMaskOpto, DrawPolyMaskOptoDMD
 from daq import LabJackU3LV, myArduino
 from LED import LEDD1B, LEDWidget
 from DMD import DMD
-#from camera_tools import XimeaCamera, CameraControl
+from camera_tools import XimeaCamera, CameraControl
 from camera_tools import CameraControl, OpenCV_Webcam
 from PyQt5.QtWidgets import QApplication
 import sys
@@ -19,8 +19,11 @@ if __name__ == "__main__":
     
     # dmd settings
     SCREEN_DMD = 1
-    DMD_HEIGHT = 1920
-    DMD_WIDTH = 1080
+    DMD_HEIGHT = 1140
+    DMD_WIDTH = 912
+
+    # labjack settingss
+    PWM_CHANNEL = 6
 
     # calibration files
     CAM2DMD = "cam2dmd.npy"
@@ -35,19 +38,16 @@ if __name__ == "__main__":
     twop_sender = ImageSender(scan_image)
 
     # Camera 
-    #cam = XimeaCamera()
-    cam = OpenCV_Webcam(-1)
+    cam = XimeaCamera()
     camera_controls = CameraControl(cam)
     camera_controls.show()
 
-    '''
     # Control LEDs
     daio = LabJackU3LV()
     #daio = myArduino("/dev/ttyUSB0")
-    led = LEDD1B(daio, pwm_channel=6, name = "465 nm") 
+    led = LEDD1B(daio, pwm_channel=PWM_CHANNEL, name = "465 nm") 
     led_widget = LEDWidget(led_drivers=[led])
     led_widget.show()
-    '''
 
     # Control DMD
     dmd_widget = DMD(screen_num=SCREEN_DMD)
@@ -72,7 +72,7 @@ if __name__ == "__main__":
     masks.mask_expose.connect(dmd_mask.expose)
     masks.clear_dmd.connect(dmd_mask.clear)
     camera_controls.image_ready.connect(cam_mask.set_image)
-    twop_sender.signal.image_ready.connect(twop_mask.set_image)
+    twop_sender.scan_image.image_ready.connect(twop_mask.set_image)
 
     app.exec()
 
