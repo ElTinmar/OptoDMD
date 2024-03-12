@@ -5,6 +5,7 @@ classdef frameDoneIPC < handle
         listeners={}
         context
         publisher
+        receiver
         channel
         flags
     end 
@@ -12,7 +13,7 @@ classdef frameDoneIPC < handle
 
     methods
 
-        function obj = frameDoneIPC(zeromq_jar_path, zeromq_address, channel)
+        function obj = frameDoneIPC(zeromq_jar_path, zeromq_protocol, zeromq_host, zeromq_port, channel)
 
             % Pull in ScanImage API handle
             scanimageObjectName='hSI';
@@ -33,8 +34,14 @@ classdef frameDoneIPC < handle
             javaclasspath(zeromq_jar_path)
             import org.zeromq.*
             obj.context = ZContext();
+
+            publisher_address = zeromq_protocol + zeromq_host + ":" + string(zeromq_port);
             obj.publisher = obj.context.createSocket(SocketType.PUSH);
-            obj.publisher.bind(zeromq_address);
+            obj.publisher.bind(publisher_address);
+
+            receiver_address = zeromq_protocol + zeromq_host + ":" + string(zeromq_port+1);
+            obj.receiver = obj.context.createSocket(SocketType.PULL);
+            obj.receiver.bind(receiver_address);
             
             obj.flags = ZMQ.DONTWAIT;
             obj.channel = channel;

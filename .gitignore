@@ -1,5 +1,6 @@
 toy_data/
 *.npy
+*.asv
 
 # logs
 *.log
