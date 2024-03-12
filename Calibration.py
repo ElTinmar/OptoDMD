@@ -3,7 +3,7 @@ from DrawMasks import  MaskManager, DrawPolyMaskOpto, DrawPolyMaskOptoDMD
 from daq import LabJackU3LV, myArduino
 from LED import LEDD1B, LEDWidget
 from DMD import DMD
-#from camera_tools import XimeaCamera, CameraControl
+from camera_tools import XimeaCamera, CameraControl
 from camera_tools import CameraControl, OpenCV_Webcam
 from PyQt5.QtWidgets import QApplication
 from alignment_tools import AlignAffine2D
@@ -39,8 +39,8 @@ def create_calibration_pattern(div: int, height: int, width: int) -> NDArray:
 if __name__ == "__main__":
 
     SCREEN_DMD = 1
-    DMD_HEIGHT = 1920
-    DMD_WIDTH = 1080
+    DMD_HEIGHT = 1140
+    DMD_WIDTH = 912
     
     ## DMD to camera
 
@@ -55,10 +55,13 @@ if __name__ == "__main__":
     dmd_widget.update_image(pattern)
 
     # camera 
-    #cam = XimeaCamera()
-    cam = OpenCV_Webcam(-1)
+    cam = XimeaCamera()
+    #cam = OpenCV_Webcam(-1)
     input("Press Enter to grab frame...")
+    cam.set_exposure(2000)
+    cam.start_acquisition()
     frame = cam.get_frame()
+    cam.stop_acquisition()
     dmd_widget.close()
 
     register = AlignAffine2D(pattern, frame.image)
