@@ -25,13 +25,19 @@ if __name__ == "__main__":
     # labjack settingss
     PWM_CHANNEL = 6
 
-    # calibration files
-    with open("cam2dmd.npy", 'rb') as f:
-        calibration_cam_to_dmd = np.load(f)
+    # calibration file
+    with open('calibration.json', 'r') as f:
+        calibration = json.load(f)
 
-    with open("cam2twop.npy", 'rb') as f:
-        calibration_cam_to_twop = np.load(f)
-
+    # 0: cam, 1: dmd, 2: twop
+    transformations = np.tile(np.eye(3), (3,3,1,1))
+    transformations[0,1] = calibration["cam_to_dmd"]
+    transformations[0,2] = calibration["cam_to_twop"]
+    transformations[1,0] = calibration["dmd_to_cam"]
+    transformations[1,2] = calibration["dmd_to_twop"]
+    transformations[2,0] = calibration["twop_to_cam"]
+    transformations[2,1] = calibration["twop_to_dmd"]
+   
     app = QApplication(sys.argv)
 
     # Communication with ScanImage
@@ -61,12 +67,6 @@ if __name__ == "__main__":
     cam_mask = DrawPolyMaskOpto(cam_drawer)
     dmd_mask = DrawPolyMaskOptoDMD(dmd_drawer)
     twop_mask = DrawPolyMaskOpto(twop_drawer)
-
-    transformations = np.tile(np.eye(3), (3,3,1,1))
-    transformations[0,1] = calibration_cam_to_dmd
-    transformations[1,0] = np.linalg.inv(calibration_cam_to_dmd)
-    transformations[0,2] = calibration_cam_to_twop
-    transformations[2,0] = np.linalg.inv(calibration_cam_to_twop)
 
     masks = MaskManager([cam_mask, dmd_mask, twop_mask], ["Camera", "DMD", "Two Photon"], transformations)
     masks.show()
