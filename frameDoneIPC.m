@@ -6,8 +6,10 @@ classdef frameDoneIPC < handle
         context
         publisher
         receiver
+        keep_listening
         channel
         flags
+        future
     end 
 
 
@@ -23,6 +25,8 @@ classdef frameDoneIPC < handle
                 obj.delete
                 return
             end
+
+            obj.keep_listening = true;
 
             obj.hSI = evalin('base',scanimageObjectName); % get hSI from the base workspace
 
@@ -46,6 +50,8 @@ classdef frameDoneIPC < handle
             obj.flags = ZMQ.DONTWAIT;
             obj.channel = channel;
 
+            % listen for commands in the background
+            obj.future = parfeval(backgroundPool, @get_SI_commands, 0, obj);
         end 
 
 
@@ -54,6 +60,8 @@ classdef frameDoneIPC < handle
             cellfun(@delete,obj.listeners)
 
         end 
+
+
 
         function fAcq(obj,source,event,varargin)
 
