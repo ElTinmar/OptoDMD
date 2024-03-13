@@ -13,6 +13,7 @@ from typing import Tuple
 from numpy.typing import NDArray
 import cv2
 from image_tools import regular_polygon, star
+import json
 
 def create_calibration_pattern(div: int, height: int, width: int) -> NDArray:
     
@@ -42,7 +43,7 @@ if __name__ == "__main__":
     DMD_HEIGHT = 1140
     DMD_WIDTH = 912
     
-    ## DMD to camera
+    ## DMD to camera ---------------------------------------------------------------
 
     # Project a pattern onto a slide, and image the slide on the camera
 
@@ -54,12 +55,12 @@ if __name__ == "__main__":
     dmd_widget = DMD(screen_num=SCREEN_DMD)
     dmd_widget.update_image(pattern)
 
-    # camera 
+    # get image from camera 
     cam = XimeaCamera()
     #cam = OpenCV_Webcam(-1)
-    input("Press Enter to grab frame...")
     cam.set_exposure(2000)
     cam.start_acquisition()
+    input("Press Enter to grab frame...")
     frame = cam.get_frame()
     cam.stop_acquisition()
     dmd_widget.close()
@@ -67,55 +68,70 @@ if __name__ == "__main__":
     register = AlignAffine2D(pattern, frame.image)
     register.show()
 
+    cam_to_dmd = register.affine_transform        
+    dmd_to_cam = np.linalg.inv(cam_to_dmd)
+
     app.exec()
 
-    with open('cam2dmd.npy', 'wb') as f:
-        np.save(f, register.affine_transform)
 
-    '''
-    ## Camera to 2P
+    ## Camera to 2P --------------------------------------------------------------
+
+    app = QApplication(sys.argv)
     
     # zmq settings
     PROTOCOL = "tcp://"
-    HOST = "192.168.236.75"
+    HOST = "o1-317"
     PORT = 5555
     scan_image = ScanImage(PROTOCOL, HOST, PORT)
 
-    
-    # put a slide with some structure under the microscope
-    # show some light and take an epifluorescence image with the camera
-    # The slide should be ideally very thin and auto-fluorescent
-    
+    print("""
+    Put a slide with some structure under the microscope
+    and take an epifluorescence image with the camera.
+    The slide should be ideally very thin and (auto-)fluorescent.
+    """)
+
     # use the DMD to expose the image
+    dmd_widget = DMD(screen_num=SCREEN_DMD)
     dmd_widget.update_image(255*np.ones((DMD_HEIGHT,DMD_WIDTH,3), np.uint8))
-    frame = cam.get_frame()
-
-    # Then take picture from the same sample with the two photon microscope
-    N = 5 
-    zoom = np.linspace(1,10,N)
-    T = np.zeros(3,3,N)
-    for idx, z in enumerate(zoom):
-        # send zoom value to scanimage over zeromq, and acquire frames
-        # for each frame do the control point registration
-        scan_image.set_zoom(z)
-        twop_image = scan_image.get_image() 
-        register = AlignAffine2D(twop_image, frame.image)
-        register.show()
-        T[:,:,idx] = register.affine_transform
-
-    # TODO maybe plot calibration with matplotlib 
-    A = np.vstack([zoom, np.ones(len(zoom))]).T # add intercept 
-    M = np.zeros(3,3,2)
-    for i in range(3):
-        for j in range(3):
-            M[i,j,:] = np.linalg.lstsq(A, T[i,j,:], rcond=None)[0]
-
-    with open('cam2twop.npy', 'wb') as f:
-        np.save(f, M)
-
-    # to get the transformation matrix for a given zoom level
-    def tform(zoom: float, M: NDArray):
-        return zoom*M[:,:,0] + M[:,:,1]
-
     
-    '''
+    # get image from camera
+    cam.set_exposure(2000)
+    cam.start_acquisition()
+    input("Press Enter to grab frame...")
+    frame = cam.get_frame()
+    cam.stop_acquisition()
+
+    # get image from scanimage 
+    input("Acquire image with scanimage, then press Enter to grab frame...")
+    twop_image = scan_image.get_image() 
+
+    # stop light
+    dmd_widget.close()
+
+    # do the registration
+    register = AlignAffine2D(twop_image, frame.image)
+    register.show()
+
+    cam_to_twop = register.affine_transform
+    twop_to_cam = np.linalg.inv(cam_to_twop)
+
+    app.exec()
+
+    # DMD to 2P ----------------------------------------------------------------
+
+    dmd_to_twop = dmd_to_cam @ cam_to_twop
+    twop_to_dmd = twop_to_cam @ cam_to_dmd
+
+    # Save results to file -----------------------------------------------------
+
+    calibration = {
+        'dmd_to_cam': dmd_to_cam,
+        'cam_to_dmd': cam_to_dmd,
+        'cam_to_twop': cam_to_twop,
+        'twop_to_cam': twop_to_cam,
+        'dmd_to_twop': dmd_to_twop,
+        'twop_to_dmd': twop_to_dmd
+    }
+
+    with open('calibration.json', 'w') as f:
+        json.dump(calibration, f)

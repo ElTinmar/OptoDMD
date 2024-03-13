@@ -26,10 +26,11 @@ if __name__ == "__main__":
     PWM_CHANNEL = 6
 
     # calibration files
-    CAM2DMD = "cam2dmd.npy"
-
-    with open(CAM2DMD, 'rb') as f:
+    with open("cam2dmd.npy", 'rb') as f:
         calibration_cam_to_dmd = np.load(f)
+
+    with open("cam2twop.npy", 'rb') as f:
+        calibration_cam_to_twop = np.load(f)
 
     app = QApplication(sys.argv)
 
@@ -64,6 +65,9 @@ if __name__ == "__main__":
     transformations = np.tile(np.eye(3), (3,3,1,1))
     transformations[0,1] = calibration_cam_to_dmd
     transformations[1,0] = np.linalg.inv(calibration_cam_to_dmd)
+    transformations[0,2] = calibration_cam_to_twop
+    transformations[2,0] = np.linalg.inv(calibration_cam_to_twop)
+
     masks = MaskManager([cam_mask, dmd_mask, twop_mask], ["Camera", "DMD", "Two Photon"], transformations)
     masks.show()
 
