@@ -1,17 +1,14 @@
-classdef frameDoneIPC < handle
+classdef frameDoneIPC
 
     properties
         hSI
         listeners={}
         context
         publisher
-        receiver
-        keep_listening
         channel
         flags
         future
     end 
-
 
     methods
 
@@ -42,26 +39,15 @@ classdef frameDoneIPC < handle
             publisher_address = zeromq_protocol + zeromq_host + ":" + string(zeromq_port);
             obj.publisher = obj.context.createSocket(SocketType.PUSH);
             obj.publisher.bind(publisher_address);
-
-            receiver_address = zeromq_protocol + zeromq_host + ":" + string(zeromq_port+1);
-            obj.receiver = obj.context.createSocket(SocketType.PULL);
-            obj.receiver.bind(receiver_address);
             
             obj.flags = ZMQ.DONTWAIT;
             obj.channel = channel;
-
-            % listen for commands in the background
-            obj.future = parfeval(backgroundPool, @get_SI_commands, 0, obj);
         end 
 
 
         function delete(obj)
-
             cellfun(@delete,obj.listeners)
-
         end 
-
-
 
         function fAcq(obj,source,event,varargin)
 

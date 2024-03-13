@@ -14,7 +14,6 @@ def deserialize(message: str) -> NDArray:
 
 class ScanImage(QObject):
 
-    zoom_changed = pyqtSignal(float) # TODO send zoom value along with image ?
     image_ready = pyqtSignal(np.ndarray)
 
     def __init__(self, protocol: str, host: str, port: int, *args, **kwargs) -> None:
@@ -27,22 +26,12 @@ class ScanImage(QObject):
         address_image = protocol + host + ":" + str(port)
         self.socket_image = self.context.socket(zmq.PULL)
         self.socket_image.connect(address_image)
-
-        # send commands to scanimage 
-        address_control = protocol + host + ":" + str(port + 1)
-        self.socket_control = self.context.socket(zmq.PUSH)
-        self.socket_control.connect(address_control)
     
     def get_image(self) -> np.ndarray:
 
         message = self.socket_image.recv()
         image = deserialize(message.decode())
         return image
-    
-    def set_zoom(self, zoom: float) -> None:
-
-        # TODO check range
-        self.socket_control.send(zoom)
 
 class ImageSender(QRunnable):
 
