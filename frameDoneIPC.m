@@ -38,6 +38,7 @@ classdef frameDoneIPC
             % Add a listener to the the notifier that fires when a frame is acquired. 
             % This is the same notifier used for user functions.
             obj.listeners{1} = addlistener(obj.hSI.hUserFunctions ,'frameAcquired', @obj.fAcq);
+            % looks like this makes a copy of the object?
         end 
 
 
@@ -48,7 +49,7 @@ classdef frameDoneIPC
         function fAcq(obj,source,event,varargin)
 
             % get image data
-            buffer = hSI.hDisplay.stripeDataBuffer{1};
+            buffer = obj.hSI.hDisplay.stripeDataBuffer{1};
             frame = buffer.roiData{1}.imageData{obj.channel}{1};
 
             % rescale image
