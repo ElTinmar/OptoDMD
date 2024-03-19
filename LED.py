@@ -1,5 +1,6 @@
 from daq import DigitalAnalogIO
 import time
+from PyQt5.QtCore import QRunnable, QThreadPool
 from PyQt5.QtWidgets import QPushButton, QLabel, QVBoxLayout, QHBoxLayout, QWidget
 from qt_widgets import LabeledSliderSpinBox, LabeledSpinBox
 from typing import Protocol, List
@@ -17,6 +18,31 @@ class LEDDriver(Protocol):
 
     def pulse(self, duration_ms: int) -> None:
         ...
+
+class PulseSender(QRunnable):
+
+    def __init__(
+            self, 
+            DAIO: DigitalAnalogIO, 
+            pulse_duration_ms: float, 
+            pwm_channel: int,
+            duty_cycle: float,
+            pwm_frequency: int,
+            *args, **kwargs):
+
+        super().__init__(*args, **kwargs)
+        
+        self.DAIO = DAIO
+        self.pulse_duration_ms = pulse_duration_ms
+        self.pwm_channel = pwm_channel
+        self.duty_cycle = duty_cycle
+        self.pwm_frequency = pwm_frequency
+
+    def run(self):
+        self.DAIO.pwm(channel=self.pwm_channel, duty_cycle=self.duty_cycle, frequency=self.pwm_frequency)
+        time.sleep(self.pulse_duration_ms/1000.0)
+        self.DAIO.pwm(channel=self.pwm_channel, duty_cycle=0, frequency=self.pwm_frequency)
+
 
 class LEDD1B:
     '''
@@ -43,6 +69,7 @@ class LEDD1B:
         self.pwm_channel = pwm_channel 
         self.intensity = 1
         self.started = False
+        self.thread_pool = QThreadPool()
 
     def set_intensity(self, intensity: float) -> None:
 
@@ -50,11 +77,13 @@ class LEDD1B:
             ValueError("intensity should be between 0 and 1")
             
         self.intensity = intensity
-        self.DAIO.pwm(channel=self.pwm_channel, duty_cycle=self.intensity, frequency=self.pwm_frequency)
+        if self.started:
+            self.DAIO.pwm(channel=self.pwm_channel, duty_cycle=self.intensity, frequency=self.pwm_frequency)
 
     def set_frequency(self, freq: float) -> None:
         self.pwm_frequency = freq
-        self.DAIO.pwm(channel=self.pwm_channel, duty_cycle=self.intensity, frequency=self.pwm_frequency)
+        if self.started:
+            self.DAIO.pwm(channel=self.pwm_channel, duty_cycle=self.intensity, frequency=self.pwm_frequency)
     
     def on(self):
         self.started = True
@@ -68,9 +97,15 @@ class LEDD1B:
         if self.started:
             raise RuntimeError('Already ON')
 
-        self.DAIO.pwm(channel=self.pwm_channel, duty_cycle=self.intensity, frequency=self.pwm_frequency)
-        time.sleep(duration_ms/1000.0)
-        self.DAIO.pwm(channel=self.pwm_channel, duty_cycle=0, frequency=self.pwm_frequency)
+        pulse_sender = PulseSender(
+            self.DAIO, 
+            duration_ms, 
+            self.pwm_channel, 
+            self.intensity, 
+            self.pwm_frequency
+        )
+        self.thread_pool.start(pulse_sender)
+
 
 
 class DriverWidget(QWidget):
