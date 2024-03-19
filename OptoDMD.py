@@ -27,21 +27,20 @@ if __name__ == "__main__":
     PWM_CHANNEL = 6
 
     # calibration file
-    transformations = np.tile(np.eye(3), (3,3,1,1))
-
     try:
         with open('calibration.json', 'r') as f:
             calibration = json.load(f)
 
         # 0: cam, 1: dmd, 2: twop
-        transformations[0,1] = calibration["cam_to_dmd"]
-        #transformations[0,2] = calibration["cam_to_twop"]
-        transformations[1,0] = calibration["dmd_to_cam"]
-        #transformations[1,2] = calibration["dmd_to_twop"]
-        #transformations[2,0] = calibration["twop_to_cam"]
-        #transformations[2,1] = calibration["twop_to_dmd"]
+        transformations[0,1] = np.asarray(calibration["cam_to_dmd"])
+        transformations[0,2] = np.asarray(calibration["cam_to_twop"])
+        transformations[1,0] = np.asarray(calibration["dmd_to_cam"])
+        transformations[1,2] = np.asarray(calibration["dmd_to_twop"])
+        transformations[2,0] = np.asarray(calibration["twop_to_cam"])
+        transformations[2,1] = np.asarray(calibration["twop_to_dmd"])
     except:
-        print("calibration couldn't be loaded")
+        transformations = np.tile(np.eye(3), (3,3,1,1))
+        print("calibration couldn't be loaded, defaulting to identity")
    
     app = QApplication(sys.argv)
 

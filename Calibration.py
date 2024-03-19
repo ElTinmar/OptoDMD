@@ -39,84 +39,92 @@ def create_calibration_pattern(div: int, height: int, width: int) -> NDArray:
 
 if __name__ == "__main__":
 
+    CALIBRATE_CAMERA = True
+    CALIBRATE_TWOPHOTON = False
     SCREEN_DMD = 1
     DMD_HEIGHT = 1140
     DMD_WIDTH = 912
+
+    I = np.eye(3)
+    dmd_to_cam = I
+    cam_to_dmd = I
+    cam_to_twop = I
+    twop_to_cam = I
+    dmd_to_twop = I
+    twop_to_dmd = I
     
-    ## DMD to camera ---------------------------------------------------------------
+    if CALIBRATE_CAMERA:
 
-    # Project a pattern onto a slide, and image the slide on the camera
+        # Project a pattern onto a slide, and image the slide on the camera
+        pattern = create_calibration_pattern(5, DMD_HEIGHT, DMD_WIDTH)
 
-    pattern = create_calibration_pattern(5, DMD_HEIGHT, DMD_WIDTH)
+        app = QApplication(sys.argv)
 
-    app = QApplication(sys.argv)
+        # projector
+        dmd_widget = DMD(screen_num=SCREEN_DMD)
+        dmd_widget.update_image(pattern)
 
-    # projector
-    dmd_widget = DMD(screen_num=SCREEN_DMD)
-    dmd_widget.update_image(pattern)
+        # get image from camera 
+        cam = XimeaCamera()
+        #cam = OpenCV_Webcam(-1)
+        cam.set_exposure(1000)
+        cam.start_acquisition()
+        input("Press Enter to grab frame...")
+        frame = cam.get_frame()
+        cam.stop_acquisition()
+        dmd_widget.close()
 
-    # get image from camera 
-    cam = XimeaCamera()
-    #cam = OpenCV_Webcam(-1)
-    cam.set_exposure(1000)
-    cam.start_acquisition()
-    input("Press Enter to grab frame...")
-    frame = cam.get_frame()
-    cam.stop_acquisition()
-    dmd_widget.close()
+        register = AlignAffine2D(pattern, frame.image)
+        register.show()
 
-    register = AlignAffine2D(pattern, frame.image)
-    register.show()
+        cam_to_dmd = register.affine_transform        
+        dmd_to_cam = np.linalg.inv(cam_to_dmd)
+        
+        app.exec()
 
-    cam_to_dmd = register.affine_transform        
-    dmd_to_cam = np.linalg.inv(cam_to_dmd)
-
-    app.exec()
-
-
-    ## Camera to 2P --------------------------------------------------------------
-
-    app = QApplication(sys.argv)
+    if CALIBRATE_TWOPHOTON:
     
-    # zmq settings
-    PROTOCOL = "tcp://"
-    HOST = "o1-317"
-    PORT = 6000
-    scan_image = ScanImage(PROTOCOL, HOST, PORT)
-
-    print("""
-    Put a slide with some structure under the microscope
-    and take an epifluorescence image with the camera.
-    The slide should be ideally very thin and (auto-)fluorescent.
-    """)
-
-    # use the DMD to expose the image
-    dmd_widget = DMD(screen_num=SCREEN_DMD)
-    dmd_widget.update_image(255*np.ones((DMD_HEIGHT,DMD_WIDTH,3), np.uint8))
+        app = QApplication(sys.argv)
     
-    # get image from camera
-    cam = XimeaCamera()
-    cam.set_exposure(40000)
-    cam.start_acquisition()
-    input("Press Enter to grab frame...")
-    frame = cam.get_frame()
-    cam.stop_acquisition()
+        # communicate with scanimage
+        PROTOCOL = "tcp://"
+        HOST = "o1-317"
+        PORT = 6000
+        scan_image = ScanImage(PROTOCOL, HOST, PORT)
 
-    # stop light
-    dmd_widget.close()
+        print("""
+        Put a slide with some structure under the microscope
+        and take an epifluorescence image with the camera.
+        The slide should be very thin and (auto-)fluorescent.
+        """)
 
-    # get image from scanimage 
-    input("Acquire image with scanimage, then press Enter to grab frame...")
-    twop_image = scan_image.get_image() 
+        # use the DMD to expose the image
+        dmd_widget = DMD(screen_num=SCREEN_DMD)
+        dmd_widget.update_image(255*np.ones((DMD_HEIGHT,DMD_WIDTH,3), np.uint8))
+        
+        # get image from camera
+        cam = XimeaCamera()
+        cam.set_exposure(40000)
+        cam.start_acquisition()
+        input("Press Enter to grab frame...")
+        frame = cam.get_frame()
+        cam.stop_acquisition()
 
-    # do the registration
-    register = AlignAffine2D(twop_image, frame.image)
-    register.show()
+        # stop light
+        dmd_widget.close()
 
-    cam_to_twop = register.affine_transform
-    twop_to_cam = np.linalg.inv(cam_to_twop)
+        # get image from scanimage 
+        input("Acquire image with scanimage, then press Enter to grab frame...")
+        twop_image = scan_image.get_image() 
 
-    app.exec()
+        # do the registration
+        register = AlignAffine2D(twop_image, frame.image)
+        register.show()
+
+        cam_to_twop = register.affine_transform
+        twop_to_cam = np.linalg.inv(cam_to_twop)
+
+        app.exec()
 
     # DMD to 2P ----------------------------------------------------------------
 
@@ -127,11 +135,11 @@ if __name__ == "__main__":
 
     calibration = {
         'dmd_to_cam': dmd_to_cam.tolist(),
-        'cam_to_dmd': cam_to_dmd,
-        'cam_to_twop': cam_to_twop,
-        'twop_to_cam': twop_to_cam,
-        'dmd_to_twop': dmd_to_twop,
-        'twop_to_dmd': twop_to_dmd
+        'cam_to_dmd': cam_to_dmd.tolist(),
+        'cam_to_twop': cam_to_twop.tolist(),
+        'twop_to_cam': twop_to_cam.tolist(),
+        'dmd_to_twop': dmd_to_twop.tolist(),
+        'twop_to_dmd': twop_to_dmd.tolist()
     }
 
     with open('calibration.json', 'w') as f:
