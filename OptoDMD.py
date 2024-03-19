@@ -6,6 +6,8 @@ from DMD import DMD
 from camera_tools import XimeaCamera, CameraControl
 from camera_tools import CameraControl, OpenCV_Webcam
 from PyQt5.QtWidgets import QApplication
+from PyQt5.QtCore import QThreadPool
+
 import sys
 import numpy as np
 from image_tools import DrawPolyMask
@@ -47,6 +49,8 @@ if __name__ == "__main__":
     # Communication with ScanImage
     scan_image = ScanImage(PROTOCOL, HOST, PORT)
     twop_sender = ImageSender(scan_image)
+    thread_pool = QThreadPool()
+    thread_pool.start(twop_sender)
 
     # Camera 
     cam = XimeaCamera(1)

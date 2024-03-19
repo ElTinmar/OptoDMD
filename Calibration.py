@@ -39,11 +39,12 @@ def create_calibration_pattern(div: int, height: int, width: int) -> NDArray:
 
 if __name__ == "__main__":
 
-    CALIBRATE_CAMERA = True
-    CALIBRATE_TWOPHOTON = False
+    CALIBRATE_CAMERA = False
+    CALIBRATE_TWOPHOTON = True
     SCREEN_DMD = 1
     DMD_HEIGHT = 1140
     DMD_WIDTH = 912
+    XIMEA_INDEX = 1
 
     I = np.eye(3)
     dmd_to_cam = I
@@ -65,7 +66,7 @@ if __name__ == "__main__":
         dmd_widget.update_image(pattern)
 
         # get image from camera 
-        cam = XimeaCamera()
+        cam = XimeaCamera(XIMEA_INDEX)
         #cam = OpenCV_Webcam(-1)
         cam.set_exposure(1000)
         cam.start_acquisition()
@@ -90,7 +91,6 @@ if __name__ == "__main__":
         PROTOCOL = "tcp://"
         HOST = "o1-317"
         PORT = 5555
-        scan_image = ScanImage(PROTOCOL, HOST, PORT)
 
         print("""
         Put a slide with some structure under the microscope
@@ -103,19 +103,22 @@ if __name__ == "__main__":
         dmd_widget.update_image(255*np.ones((DMD_HEIGHT,DMD_WIDTH,3), np.uint8))
         
         # get image from camera
-        cam = XimeaCamera()
-        cam.set_exposure(40000)
+        cam = XimeaCamera(XIMEA_INDEX)
+        cam.set_exposure(10000)
         cam.start_acquisition()
         input("Press Enter to grab frame...")
         frame = cam.get_frame()
+        print("...image captured")
         cam.stop_acquisition()
 
         # stop light
         dmd_widget.close()
 
         # get image from scanimage 
+        scan_image = ScanImage(PROTOCOL, HOST, PORT)
         input("Acquire image with scanimage, then press Enter to grab frame...")
         twop_image = scan_image.get_image() 
+        print("...image captured")
 
         # do the registration
         register = AlignAffine2D(twop_image, frame.image)
