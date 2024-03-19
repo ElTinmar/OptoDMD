@@ -49,6 +49,8 @@ class ImageSender(QRunnable):
         while self.keepgoing:
             image = self.scan_image.get_image()
             self.scan_image.image_ready.emit(image)
+            print("got an image")
+            print(np.max(image))
 
 class TwoPhoton(QWidget):
 

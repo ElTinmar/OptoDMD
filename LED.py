@@ -90,7 +90,7 @@ class DriverWidget(QWidget):
         self.intensity_slider = LabeledSliderSpinBox(self)
         self.intensity_slider.setText('intensity (%)')
         self.intensity_slider.setRange(0, 100)
-        self.intensity_slider.setValue(50)
+        self.intensity_slider.setValue(0)
         self.intensity_slider.valueChanged.connect(self.set_intensity)
         self.driver.set_intensity(0.5)
 

@@ -49,7 +49,7 @@ if __name__ == "__main__":
     twop_sender = ImageSender(scan_image)
 
     # Camera 
-    cam = XimeaCamera()
+    cam = XimeaCamera(1)
     camera_controls = CameraControl(cam)
     camera_controls.show()
 
