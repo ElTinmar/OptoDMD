@@ -89,7 +89,7 @@ if __name__ == "__main__":
         # communicate with scanimage
         PROTOCOL = "tcp://"
         HOST = "o1-317"
-        PORT = 6000
+        PORT = 5555
         scan_image = ScanImage(PROTOCOL, HOST, PORT)
 
         print("""
