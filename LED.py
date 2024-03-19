@@ -19,7 +19,15 @@ class LEDDriver(Protocol):
         ...
 
 class LEDD1B:
-    '''Control a Thorlabs LED driver for optogenetics stimulation using PWM'''
+    '''
+    Control a Thorlabs LED driver for optogenetics stimulation using PWM
+    Two modes of operations.
+    - LEDD1B switched to MOD: intensity controls the brightness of the LED, 
+        high PWM frequency recommended
+    - LEDD1B switched to TRIG: LED brightness controlled via the knob on the device,
+        can use PWM frequency to flash the light at set brightness at a given frequency. 
+        Intensity controls the duty cycle
+    '''
 
     def __init__(
             self, 
