@@ -58,7 +58,7 @@ if __name__ == "__main__":
     # get image from camera 
     cam = XimeaCamera()
     #cam = OpenCV_Webcam(-1)
-    cam.set_exposure(2000)
+    cam.set_exposure(1000)
     cam.start_acquisition()
     input("Press Enter to grab frame...")
     frame = cam.get_frame()
@@ -81,7 +81,7 @@ if __name__ == "__main__":
     # zmq settings
     PROTOCOL = "tcp://"
     HOST = "o1-317"
-    PORT = 5555
+    PORT = 6000
     scan_image = ScanImage(PROTOCOL, HOST, PORT)
 
     print("""
@@ -95,18 +95,19 @@ if __name__ == "__main__":
     dmd_widget.update_image(255*np.ones((DMD_HEIGHT,DMD_WIDTH,3), np.uint8))
     
     # get image from camera
-    cam.set_exposure(2000)
+    cam = XimeaCamera()
+    cam.set_exposure(40000)
     cam.start_acquisition()
     input("Press Enter to grab frame...")
     frame = cam.get_frame()
     cam.stop_acquisition()
 
+    # stop light
+    dmd_widget.close()
+
     # get image from scanimage 
     input("Acquire image with scanimage, then press Enter to grab frame...")
     twop_image = scan_image.get_image() 
-
-    # stop light
-    dmd_widget.close()
 
     # do the registration
     register = AlignAffine2D(twop_image, frame.image)
@@ -125,7 +126,7 @@ if __name__ == "__main__":
     # Save results to file -----------------------------------------------------
 
     calibration = {
-        'dmd_to_cam': dmd_to_cam,
+        'dmd_to_cam': dmd_to_cam.tolist(),
         'cam_to_dmd': cam_to_dmd,
         'cam_to_twop': cam_to_twop,
         'twop_to_cam': twop_to_cam,
