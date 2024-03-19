@@ -43,6 +43,10 @@ class LEDD1B:
             
         self.intensity = intensity
         self.DAIO.pwm(channel=self.pwm_channel, duty_cycle=self.intensity, frequency=self.pwm_frequency)
+
+    def set_frequency(self, freq: float) -> None:
+        self.pwm_frequency = freq
+        self.DAIO.pwm(channel=self.pwm_channel, duty_cycle=self.intensity, frequency=self.pwm_frequency)
     
     def on(self):
         self.started = True
@@ -94,7 +98,13 @@ class DriverWidget(QWidget):
         self.pulse_spinbox.setText('pulse duration (ms)')
         self.pulse_spinbox.setRange(0, 100_000)
         self.pulse_spinbox.setValue(1000)
-        
+
+        self.freq_spinbox = LabeledSpinBox(self)
+        self.freq_spinbox.setText('PWM frequency (Hz)')
+        self.freq_spinbox.setRange(0, 100_000)
+        self.freq_spinbox.setValue(1000)
+        self.freq_spinbox.valueChanged.connect(self.set_frequency)
+
         self.pulse_button = QPushButton(self)
         self.pulse_button.setText('pulse')
         self.pulse_button.clicked.connect(self.pulse)
@@ -108,8 +118,12 @@ class DriverWidget(QWidget):
         main_layout.addWidget(self.on_button)
         main_layout.addWidget(self.off_button)
         main_layout.addWidget(self.pulse_spinbox)
+        main_layout.addWidget(self.freq_spinbox)
         main_layout.addWidget(self.pulse_button)
         main_layout.addStretch()
+
+    def set_frequency(self, val: int):
+        self.driver.set_frequency(val)
 
     def set_intensity(self, val: int):
         self.driver.set_intensity(val/100)
