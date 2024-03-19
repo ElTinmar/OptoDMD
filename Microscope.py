@@ -47,7 +47,7 @@ class ImageSender(QRunnable):
     def run(self):
         while self.keepgoing:
             image = self.scan_image.get_image()
-            image = im2uint8(image)
+            image = np.clip(image,0,1)
             self.scan_image.image_ready.emit(image)
 
 class TwoPhoton(QWidget):
