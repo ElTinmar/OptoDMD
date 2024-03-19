@@ -76,11 +76,11 @@ if __name__ == "__main__":
 
         register = AlignAffine2D(pattern, frame.image)
         register.show()
+        app.exec()
 
         cam_to_dmd = register.affine_transform        
         dmd_to_cam = np.linalg.inv(cam_to_dmd)
         
-        app.exec()
 
     if CALIBRATE_TWOPHOTON:
     
@@ -120,11 +120,10 @@ if __name__ == "__main__":
         # do the registration
         register = AlignAffine2D(twop_image, frame.image)
         register.show()
-
+        app.exec()
+        
         cam_to_twop = register.affine_transform
         twop_to_cam = np.linalg.inv(cam_to_twop)
-
-        app.exec()
 
     # DMD to 2P ----------------------------------------------------------------
 
