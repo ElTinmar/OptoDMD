@@ -32,6 +32,7 @@ class DigitalAnalogIO(Protocol):
     def close(self) -> None:
         ...
 
+# NOTE can't use arduino to control PWM freq
 class myArduino:
 
     # PWM frequency is around 490Hz on most pins, 
