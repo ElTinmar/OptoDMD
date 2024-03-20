@@ -40,7 +40,7 @@ def create_calibration_pattern(div: int, height: int, width: int) -> NDArray:
 if __name__ == "__main__":
 
     CALIBRATE_CAMERA = False
-    CALIBRATE_TWOPHOTON = True
+    CALIBRATE_TWOPHOTON = False
     SCREEN_DMD = 1
     DMD_HEIGHT = 1140
     DMD_WIDTH = 912
@@ -151,8 +151,8 @@ if __name__ == "__main__":
     with open('calibration_cam_twop.json', 'r') as f2:
         cal_cam_twop = json.load(f2)
         
-    dmd_to_twop = np.asarray(cal_cam_dmd['dmd_to_cam']) @ np.asarray(cal_cam_twop['cam_to_twop'])
-    twop_to_dmd = np.asarray(cal_cam_twop['twop_to_cam']) @ np.asarray(cal_cam_dmd['cam_to_dmd'])
+    dmd_to_twop = np.asarray(cal_cam_twop['cam_to_twop']) @ np.asarray(cal_cam_dmd['dmd_to_cam']) 
+    twop_to_dmd = np.asarray(cal_cam_dmd['cam_to_dmd']) @ np.asarray(cal_cam_twop['twop_to_cam']) 
 
     # Save results to file -----------------------------------------------------
 
