@@ -39,7 +39,7 @@ def create_calibration_pattern(div: int, height: int, width: int) -> NDArray:
 
 if __name__ == "__main__":
 
-    CALIBRATE_CAMERA = True
+    CALIBRATE_CAMERA = False
     CALIBRATE_TWOPHOTON = True
     SCREEN_DMD = 1
     DMD_HEIGHT = 1140
@@ -81,7 +81,14 @@ if __name__ == "__main__":
 
         cam_to_dmd = register.affine_transform        
         dmd_to_cam = np.linalg.inv(cam_to_dmd)
-        
+
+        calibration_cam_dmd = {
+            'dmd_to_cam': dmd_to_cam.tolist(),
+            'cam_to_dmd': cam_to_dmd.tolist()
+        }
+    
+        with open('calibration_cam_dmd.json', 'w') as f:
+            json.dump(calibration_cam_dmd, f)
 
     if CALIBRATE_TWOPHOTON:
     
@@ -104,7 +111,7 @@ if __name__ == "__main__":
         
         # get image from camera
         cam = XimeaCamera(XIMEA_INDEX)
-        cam.set_exposure(10000)
+        cam.set_exposure(10_000)
         cam.start_acquisition()
         input("Press Enter to grab frame...")
         frame = cam.get_frame()
@@ -128,18 +135,32 @@ if __name__ == "__main__":
         cam_to_twop = register.affine_transform
         twop_to_cam = np.linalg.inv(cam_to_twop)
 
+        calibration_cam_twop = {
+            'cam_to_twop': cam_to_twop.tolist(),
+            'twop_to_cam': twop_to_cam.tolist()
+        }
+
+        with open('calibration_cam_twop.json', 'w') as f:
+            json.dump(calibration_cam_twop, f)
+
     # DMD to 2P ----------------------------------------------------------------
 
-    dmd_to_twop = dmd_to_cam @ cam_to_twop
-    twop_to_dmd = twop_to_cam @ cam_to_dmd
+    with open('calibration_cam_dmd.json', 'r') as f1:
+        cal_cam_dmd = json.load(f1)
+
+    with open('calibration_cam_twop.json', 'r') as f2:
+        cal_cam_twop = json.load(f2)
+        
+    dmd_to_twop = np.asarray(cal_cam_dmd['dmd_to_cam']) @ np.asarray(cal_cam_twop['cam_to_twop'])
+    twop_to_dmd = np.asarray(cal_cam_twop['twop_to_cam']) @ np.asarray(cal_cam_dmd['cam_to_dmd'])
 
     # Save results to file -----------------------------------------------------
 
     calibration = {
-        'dmd_to_cam': dmd_to_cam.tolist(),
-        'cam_to_dmd': cam_to_dmd.tolist(),
-        'cam_to_twop': cam_to_twop.tolist(),
-        'twop_to_cam': twop_to_cam.tolist(),
+        'dmd_to_cam': cal_cam_dmd['dmd_to_cam'],
+        'cam_to_dmd': cal_cam_dmd['cam_to_dmd'],
+        'cam_to_twop': cal_cam_twop['cam_to_twop'],
+        'twop_to_cam': cal_cam_twop['twop_to_cam'],
         'dmd_to_twop': dmd_to_twop.tolist(),
         'twop_to_dmd': twop_to_dmd.tolist()
     }
