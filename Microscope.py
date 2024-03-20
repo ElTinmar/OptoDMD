@@ -30,6 +30,7 @@ class ScanImage(QObject):
     def get_image(self) -> np.ndarray:
         message = self.socket_image.recv()
         image = deserialize(message.decode())
+        image = np.clip(image,0,1)
         return image
 
 class ImageSender(QRunnable):
@@ -47,7 +48,6 @@ class ImageSender(QRunnable):
     def run(self):
         while self.keepgoing:
             image = self.scan_image.get_image()
-            image = np.clip(image,0,1)
             self.scan_image.image_ready.emit(image)
 
 class TwoPhoton(QWidget):
