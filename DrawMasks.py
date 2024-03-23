@@ -188,7 +188,8 @@ class DrawPolyMaskOptoCam(DrawPolyMaskOpto):
 
     def __init__(self, drawer: DrawPolyMask, camera_control: CameraControl, *args, **kwargs):
 
-        super.__init__(drawer, *args, **kwargs)
+        super().__init__(drawer, *args, **kwargs)
+
         self.camera_control = camera_control 
         self._receiver = None
         self.thread_pool = QThreadPool()
@@ -217,6 +218,8 @@ class DrawPolyMaskOptoCam(DrawPolyMaskOpto):
 class DrawPolyMaskOpto2P(DrawPolyMaskOpto):
 
     def __init__(self,  drawer: DrawPolyMask, scan_image: ScanImage, *args, **kwargs):
+
+        super().__init__(drawer, *args, **kwargs)
 
         self.scan_image = scan_image
         self.receiver = TwoPReceiver(scan_image, self.set_image)

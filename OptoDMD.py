@@ -24,11 +24,11 @@ if __name__ == "__main__":
     DMD_WIDTH = 912
 
     # labjack settings
-    USE_LABJACK = False
+    USE_LABJACK = False # Only set to False for testing purposes on a machine without a labjack
     PWM_CHANNEL = 6
 
     # camera settings
-    XIMEA_CAMERA_ID = None
+    XIMEA_CAMERA_ID = None # Only set to None for testing purposes on a machine without a Ximea camera
 
     # calibration file
     transformations = np.tile(np.eye(3), (3,3,1,1))
