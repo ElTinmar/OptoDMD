@@ -3,7 +3,6 @@ from DrawMasks import  MaskManager, DrawPolyMaskOpto2P, DrawPolyMaskOptoDMD, Dra
 from daq import LabJackU3LV
 from LED import LEDD1B, LEDWidget
 from DMD import DMD
-from camera_tools import XimeaCamera, CameraControl
 from camera_tools import CameraControl, OpenCV_Webcam
 from PyQt5.QtWidgets import QApplication
 
@@ -27,6 +26,9 @@ if __name__ == "__main__":
     # labjack settingss
     PWM_CHANNEL = 6
 
+    # camera settings
+    XIMEA_CAMERA_ID = None
+
     # calibration file
     transformations = np.tile(np.eye(3), (3,3,1,1))
     try:
@@ -49,7 +51,12 @@ if __name__ == "__main__":
     scan_image = ScanImage(PROTOCOL, HOST, PORT)
 
     # Camera 
-    cam = XimeaCamera(1)
+    if XIMEA_CAMERA_ID:
+        from camera_tools import XimeaCamera
+        cam = XimeaCamera(XIMEA_CAMERA_ID)
+    else:
+        cam = OpenCV_Webcam()
+
     camera_controls = CameraControl(cam)
     camera_controls.show()
 
@@ -80,4 +87,3 @@ if __name__ == "__main__":
     masks.clear_dmd.connect(dmd_mask.clear)
 
     app.exec()
-    
