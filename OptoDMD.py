@@ -76,7 +76,6 @@ if __name__ == "__main__":
     dmd_drawer = DrawPolyMask(np.zeros((DMD_HEIGHT,DMD_WIDTH)))
     twop_drawer = DrawPolyMask(np.zeros((512,512)))
 
-
     cam_mask = DrawPolyMaskOptoCam(cam_drawer, camera_controls)
     dmd_mask = DrawPolyMaskOptoDMD(dmd_drawer)
     twop_mask = DrawPolyMaskOpto2P(twop_drawer, scan_image)
