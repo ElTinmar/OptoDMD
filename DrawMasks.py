@@ -212,7 +212,6 @@ class DrawPolyMaskOptoCam(DrawPolyMaskOpto):
 
     def closeEvent(self, event):
         self.camera_control.close() 
-        self.receiver.terminate()
 
 class DrawPolyMaskOpto2P(DrawPolyMaskOpto):
 
@@ -221,9 +220,24 @@ class DrawPolyMaskOpto2P(DrawPolyMaskOpto):
         super().__init__(drawer, *args, **kwargs)
 
         self.scan_image = scan_image
-        self.receiver = TwoPReceiver(scan_image, self.set_image)
+        self.buffer = None
+        self.reload_buffer()
+
+        self.scan_image.frame_received.connect(self.update_image)
+        self.scan_image.buffer_updated.connect(self.reload_buffer)
+        self.receiver = TwoPReceiver(scan_image)
         self.thread_pool = QThreadPool()
         self.thread_pool.start(self.receiver)
+
+    def reload_buffer(self):
+        self.buffer = self.scan_image.get_buffer()
+
+    def update_image(self):
+        try:
+            frame = self.buffer.get(blocking=False)
+            self.set_image(frame.image)
+        except Empty:
+            pass
 
     def closeEvent(self, event):
         self.receiver.terminate()

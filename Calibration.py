@@ -124,11 +124,11 @@ if __name__ == "__main__":
         # get image from scanimage 
         scan_image = ScanImage(PROTOCOL, HOST, PORT)
         input("Acquire image with scanimage, then press Enter to grab frame...")
-        twop_image = scan_image.get_image() 
+        twop_frame = scan_image.get_frame() 
         print("...image captured")
 
         # do the registration
-        register = AlignAffine2D(twop_image, frame.image)
+        register = AlignAffine2D(twop_frame.image, frame.image)
         register.show()
         app.exec()
         
