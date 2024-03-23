@@ -1,12 +1,11 @@
-from Microscope import ImageSender, ScanImage
-from DrawMasks import  MaskManager, DrawPolyMaskOpto, DrawPolyMaskOptoDMD, DrawPolyMaskOptoCam
+from Microscope import ScanImage
+from DrawMasks import  MaskManager, DrawPolyMaskOpto2P, DrawPolyMaskOptoDMD, DrawPolyMaskOptoCam
 from daq import LabJackU3LV
 from LED import LEDD1B, LEDWidget
 from DMD import DMD
 from camera_tools import XimeaCamera, CameraControl
 from camera_tools import CameraControl, OpenCV_Webcam
 from PyQt5.QtWidgets import QApplication
-from PyQt5.QtCore import QThreadPool
 
 import sys
 import numpy as np
@@ -48,9 +47,6 @@ if __name__ == "__main__":
 
     # Communication with ScanImage
     scan_image = ScanImage(PROTOCOL, HOST, PORT)
-    twop_sender = ImageSender(scan_image)
-    thread_pool = QThreadPool()
-    thread_pool.start(twop_sender)
 
     # Camera 
     cam = XimeaCamera(1)
@@ -73,7 +69,7 @@ if __name__ == "__main__":
 
     cam_mask = DrawPolyMaskOptoCam(cam_drawer, camera_controls)
     dmd_mask = DrawPolyMaskOptoDMD(dmd_drawer)
-    twop_mask = DrawPolyMaskOpto(twop_drawer)
+    twop_mask = DrawPolyMaskOpto2P(twop_drawer, scan_image)
 
     masks = MaskManager([cam_mask, dmd_mask, twop_mask], ["Camera", "DMD", "Two Photon"], transformations)
     masks.show()
@@ -82,8 +78,6 @@ if __name__ == "__main__":
     dmd_mask.DMD_update.connect(dmd_widget.update_image)
     masks.mask_expose.connect(dmd_mask.expose)
     masks.clear_dmd.connect(dmd_mask.clear)
-    twop_sender.scan_image.image_ready.connect(twop_mask.set_image)
 
     app.exec()
-
-    twop_sender.stop()
+    
