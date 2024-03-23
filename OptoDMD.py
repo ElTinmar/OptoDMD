@@ -23,7 +23,8 @@ if __name__ == "__main__":
     DMD_HEIGHT = 1140
     DMD_WIDTH = 912
 
-    # labjack settingss
+    # labjack settings
+    USE_LABJACK = False
     PWM_CHANNEL = 6
 
     # camera settings
@@ -55,16 +56,17 @@ if __name__ == "__main__":
         from camera_tools import XimeaCamera
         cam = XimeaCamera(XIMEA_CAMERA_ID)
     else:
-        cam = OpenCV_Webcam()
+        cam = OpenCV_Webcam(-1)
 
     camera_controls = CameraControl(cam)
     camera_controls.show()
 
     # Control LEDs
-    daio = LabJackU3LV()
-    led = LEDD1B(daio, pwm_channel=PWM_CHANNEL, name = "465 nm") 
-    led_widget = LEDWidget(led_drivers=[led])
-    led_widget.show()
+    if USE_LABJACK:
+        daio = LabJackU3LV()
+        led = LEDD1B(daio, pwm_channel=PWM_CHANNEL, name = "465 nm") 
+        led_widget = LEDWidget(led_drivers=[led])
+        led_widget.show()
 
     # Control DMD
     dmd_widget = DMD(screen_num=SCREEN_DMD)
@@ -73,6 +75,7 @@ if __name__ == "__main__":
     cam_drawer = DrawPolyMask(np.zeros((512,512)))
     dmd_drawer = DrawPolyMask(np.zeros((DMD_HEIGHT,DMD_WIDTH)))
     twop_drawer = DrawPolyMask(np.zeros((512,512)))
+
 
     cam_mask = DrawPolyMaskOptoCam(cam_drawer, camera_controls)
     dmd_mask = DrawPolyMaskOptoDMD(dmd_drawer)
