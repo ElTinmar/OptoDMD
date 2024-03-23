@@ -224,7 +224,7 @@ class DrawPolyMaskOpto2P(DrawPolyMaskOpto):
         self.scan_image = scan_image
         self.receiver = TwoPReceiver(scan_image, self.set_image)
         self.thread_pool = QThreadPool()
-        self.thread_pool.start(self.twop_receiver)
+        self.thread_pool.start(self.receiver)
 
     def closeEvent(self, event):
         self.receiver.terminate()
