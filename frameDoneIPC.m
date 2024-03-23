@@ -51,14 +51,20 @@ classdef frameDoneIPC
             % get image data
             buffer = obj.hSI.hDisplay.stripeDataBuffer{1};
             frame = buffer.roiData{1}.imageData{obj.channel}{1};
+            im_num = buffer.frameNumberAcq;
+            im_time = buffer.frameTimestamp;
 
             % rescale image
             im_min = obj.hSI.hChannels.channelLUT{obj.channel}(1);
             im_max = obj.hSI.hChannels.channelLUT{obj.channel}(2);
             frame = (single(frame) - single(im_min))./(single(im_max)-single(im_min));
+
+            % clip between 0 and 1
+            frame(frame<0) = 0;
+            frame(frame>1) = 1;
             
             % send image via ZMQ 
-            obj.publisher.send(serialize(frame'), obj.flags); 
+            obj.publisher.send(serialize(im_num, im_time, frame'), obj.flags); 
 
         end 
 
