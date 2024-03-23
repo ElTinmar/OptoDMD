@@ -1,12 +1,13 @@
 import cv2
-from PyQt5.QtCore import pyqtSignal, Qt, QThreadPool
+from PyQt5.QtCore import pyqtSignal, Qt, QThreadPool, QTimer
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QTabWidget, QScrollArea, QPushButton, QFrame, QLineEdit, QCheckBox
 import numpy as np
 from numpy.typing import NDArray
 from typing import Optional, List
 from image_tools import DrawPolyMask
-from camera_tools import CameraControl, FrameReceiver
+from camera_tools import CameraControl
 from Microscope import TwoPReceiver, ScanImage
+from queue import Empty
 
 class DrawPolyMaskOpto(QWidget):
     """
@@ -190,29 +191,27 @@ class DrawPolyMaskOptoCam(DrawPolyMaskOpto):
 
         super().__init__(drawer, *args, **kwargs)
 
-        self._receiver = None
-        self.thread_pool = QThreadPool()
+        self.buffer = None
         self.camera_control = camera_control 
         self.camera_control.buffer_updated.connect(self.reload_buffer)
         self.reload_buffer()
 
-    @property
-    def receiver(self) -> FrameReceiver:
-        return self._receiver
-    
-    @receiver.setter
-    def receiver(self, value: FrameReceiver) -> None:
-        if self._receiver:
-            self._receiver.terminate()
-        self._receiver = value 
-        self.thread_pool.start(self._receiver)
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.update_image)
+        self.timer.start(33)
+
+    def update_image(self):
+        try:
+            frame = self.buffer.get(blocking=False)
+            self.set_image(frame.image)
+        except Empty:
+            pass
 
     def reload_buffer(self):
-        buffer = self.camera_control.get_buffer()
-        self.receiver = FrameReceiver(buffer, self.set_image)
+        self.buffer = self.camera_control.get_buffer()
 
     def closeEvent(self, event):
-        self.camera_control.close()
+        self.camera_control.close() 
         self.receiver.terminate()
 
 class DrawPolyMaskOpto2P(DrawPolyMaskOpto):
