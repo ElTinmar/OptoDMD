@@ -5,6 +5,7 @@ from PyQt5.QtCore import pyqtSignal, pyqtSlot, QRunnable, QThreadPool, QObject
 from PyQt5.QtWidgets import QLabel,  QWidget
 from qt_widgets import NDarray_to_QPixmap
 from image_tools import im2uint8
+from typing import Callable
 
 def deserialize(message: str) -> NDArray:
     '''deserialize string into numpy array'''
@@ -13,8 +14,6 @@ def deserialize(message: str) -> NDArray:
     return np.array(data, dtype = np.float32)
 
 class ScanImage(QObject):
-
-    image_ready = pyqtSignal(np.ndarray)
 
     def __init__(self, protocol: str, host: str, port: int, *args, **kwargs) -> None:
 
@@ -33,43 +32,21 @@ class ScanImage(QObject):
         image = np.clip(image,0,1)
         return image
 
-class ImageSender(QRunnable):
+class TwoPReceiver(QRunnable):
 
-    def __init__(self, scan_image: ScanImage, *args, **kwargs):
+    def __init__(self, scan_image: ScanImage, callback: Callable[[np.ndarray], None], *args, **kwargs):
 
         super().__init__(*args, **kwargs)
         
         self.scan_image = scan_image
         self.keepgoing = True
+        self.callback = callback
     
-    def stop(self):
+    def terminate(self):
         self.keepgoing = False
 
     def run(self):
         while self.keepgoing:
             image = self.scan_image.get_image()
-            self.scan_image.image_ready.emit(image)
+            self.callback(image)
 
-class TwoPhoton(QWidget):
-
-    def __init__(self, sender: ImageSender, *args, **kwargs):
-
-        super().__init__(*args, **kwargs)
-
-        self.sender = sender
-        self.sender.scan_image.image_ready.connect(self.display)
-        self.thread_pool = QThreadPool()
-        self.thread_pool.start(sender)
-
-        self.twop_image = QLabel(self)
-        self.twop_image.setFixedWidth(512)
-        self.twop_image.setFixedHeight(512)
-
-    @pyqtSlot(np.ndarray)
-    def display(self, image: NDArray):
-        image = im2uint8(image)
-        self.twop_image.setPixmap(NDarray_to_QPixmap(image))
-        self.update()
-
-    def closeEvent(self, event):
-        self.sender.stop()
