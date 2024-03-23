@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import QWidget, QLabel, QApplication
-from PyQt5.QtCore import Qt, pyqtSlot, QTimer, pyqtSignal
+from PyQt5.QtCore import Qt, pyqtSlot
 from PyQt5.QtGui import QColor, QPixmap
 from numpy.typing import NDArray
 import numpy as np
@@ -43,27 +43,4 @@ class DMD(QWidget):
         image = im2rgb(im2uint8(image))
         self.img_label.setPixmap(NDarray_to_QPixmap(image))     
 
-class ImageSender(QWidget):
 
-    send_image = pyqtSignal(np.ndarray)
-
-    def __init__ (self, dmd_widget: DMD , *args, **kwargs):
-
-        super().__init__(*args, **kwargs)
-        self.dmd_widget = dmd_widget
-
-        self.send_image.connect(self.dmd_widget.update_image)
-
-        self.timer = QTimer()
-        self.timer.timeout.connect(self.loop)
-        self.timer.setInterval(33)
-        self.timer.start()
-    
-    def loop(self):
-        image = np.random.randint(
-            0, 255,
-            [self.dmd_widget.screen_height, self.dmd_widget.screen_width], 
-            np.uint8
-        )
-
-        self.send_image.emit(image)
