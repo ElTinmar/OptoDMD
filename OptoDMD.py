@@ -1,5 +1,5 @@
 from Microscope import ImageSender, ScanImage
-from DrawMasks import  MaskManager, DrawPolyMaskOpto, DrawPolyMaskOptoDMD
+from DrawMasks import  MaskManager, DrawPolyMaskOpto, DrawPolyMaskOptoDMD, DrawPolyMaskOptoCam
 from daq import LabJackU3LV
 from LED import LEDD1B, LEDWidget
 from DMD import DMD
@@ -71,7 +71,7 @@ if __name__ == "__main__":
     dmd_drawer = DrawPolyMask(np.zeros((DMD_HEIGHT,DMD_WIDTH)))
     twop_drawer = DrawPolyMask(np.zeros((512,512)))
 
-    cam_mask = DrawPolyMaskOpto(cam_drawer)
+    cam_mask = DrawPolyMaskOptoCam(cam_drawer, camera_controls)
     dmd_mask = DrawPolyMaskOptoDMD(dmd_drawer)
     twop_mask = DrawPolyMaskOpto(twop_drawer)
 
@@ -82,7 +82,6 @@ if __name__ == "__main__":
     dmd_mask.DMD_update.connect(dmd_widget.update_image)
     masks.mask_expose.connect(dmd_mask.expose)
     masks.clear_dmd.connect(dmd_mask.clear)
-    #camera_controls.image_ready.connect(cam_mask.set_image)
     twop_sender.scan_image.image_ready.connect(twop_mask.set_image)
 
     app.exec()
