@@ -190,9 +190,9 @@ class DrawPolyMaskOptoCam(DrawPolyMaskOpto):
 
         super().__init__(drawer, *args, **kwargs)
 
-        self.camera_control = camera_control 
         self._receiver = None
         self.thread_pool = QThreadPool()
+        self.camera_control = camera_control 
         self.camera_control.buffer_updated.connect(self.reload_buffer)
         self.reload_buffer()
 
