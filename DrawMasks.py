@@ -174,7 +174,6 @@ class DrawPolyMaskOptoDMD(DrawPolyMaskOpto):
 
     def update_pixmap(self):
         super().update_pixmap()
-        #self.DMD_update.emit(im2uint8(self.im_display))
 
     def expose(self, key: int):
         masks = self.get_masks()
@@ -187,7 +186,7 @@ class DrawPolyMaskOptoDMD(DrawPolyMaskOpto):
 
 class DrawPolyMaskOptoCam(DrawPolyMaskOpto):
 
-    def __init__(self,  drawer: DrawPolyMask, camera_control: CameraControl, *args, **kwargs):
+    def __init__(self, drawer: DrawPolyMask, camera_control: CameraControl, *args, **kwargs):
 
         super.__init__(drawer, *args, **kwargs)
         self.camera_control = camera_control 
