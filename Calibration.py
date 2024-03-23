@@ -1,15 +1,10 @@
-from Microscope import ImageSender, ScanImage
-from DrawMasks import  MaskManager, DrawPolyMaskOpto, DrawPolyMaskOptoDMD
-from daq import LabJackU3LV, myArduino
-from LED import LEDD1B, LEDWidget
+from Microscope import ScanImage
 from DMD import DMD
-from camera_tools import XimeaCamera, CameraControl
-from camera_tools import CameraControl, OpenCV_Webcam
+from camera_tools import XimeaCamera, CameraControl, CameraPreview
 from PyQt5.QtWidgets import QApplication
 from alignment_tools import AlignAffine2D
 import sys
 import numpy as np
-from typing import Tuple
 from numpy.typing import NDArray
 import cv2
 from image_tools import regular_polygon, star
@@ -39,7 +34,7 @@ def create_calibration_pattern(div: int, height: int, width: int) -> NDArray:
 
 if __name__ == "__main__":
 
-    CALIBRATE_CAMERA = False
+    CALIBRATE_CAMERA = True
     CALIBRATE_TWOPHOTON = False
     SCREEN_DMD = 1
     DMD_HEIGHT = 1140
@@ -67,13 +62,15 @@ if __name__ == "__main__":
 
         # get image from camera 
         cam = XimeaCamera(XIMEA_INDEX)
-        #cam = OpenCV_Webcam(-1)
-        cam.set_exposure(1000)
+        controls = CameraControl(cam)
+        preview = CameraPreview(controls)
         cam.start_acquisition()
+        preview.show()
         input("Press Enter to grab frame...")
         frame = cam.get_frame()
         cam.stop_acquisition()
         dmd_widget.close()
+        preview.close()
 
         register = AlignAffine2D(pattern, frame.image)
         register.show()
@@ -111,15 +108,16 @@ if __name__ == "__main__":
         
         # get image from camera
         cam = XimeaCamera(XIMEA_INDEX)
-        cam.set_exposure(10_000)
+        controls = CameraControl(cam)
+        preview = CameraPreview(controls)
         cam.start_acquisition()
+        preview.show()
         input("Press Enter to grab frame...")
         frame = cam.get_frame()
         print("...image captured")
         cam.stop_acquisition()
-
-        # stop light
         dmd_widget.close()
+        preview.close()
 
         # get image from scanimage 
         scan_image = ScanImage(PROTOCOL, HOST, PORT)
