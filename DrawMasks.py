@@ -6,6 +6,7 @@ from numpy.typing import NDArray
 from typing import Optional, List
 from image_tools import DrawPolyMask
 from camera_tools import CameraControl, FrameReceiver
+from Microscope import TwoPReceiver, ScanImage
 
 class DrawPolyMaskOpto(QWidget):
     """
@@ -212,6 +213,18 @@ class DrawPolyMaskOptoCam(DrawPolyMaskOpto):
 
     def closeEvent(self, event):
         self.camera_control.close()
+        self.receiver.terminate()
+
+class DrawPolyMaskOpto2P(DrawPolyMaskOpto):
+
+    def __init__(self,  drawer: DrawPolyMask, scan_image: ScanImage, *args, **kwargs):
+
+        self.scan_image = scan_image
+        self.receiver = TwoPReceiver(scan_image, self.set_image)
+        self.thread_pool = QThreadPool()
+        self.thread_pool.start(self.twop_receiver)
+
+    def closeEvent(self, event):
         self.receiver.terminate()
 
 class MaskItem(QWidget):
