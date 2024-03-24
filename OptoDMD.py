@@ -3,6 +3,7 @@ from DrawMasks import  MaskManager, DrawPolyMaskOpto, DrawPolyMaskOptoDMD
 from daq import LabJackU3LV
 from LED import LEDD1B, LEDWidget
 from DMD import DMD
+from Communication import ImageStore
 from camera_tools import XimeaCamera, CameraControl
 from camera_tools import CameraControl, OpenCV_Webcam
 from PyQt5.QtWidgets import QApplication
@@ -43,12 +44,14 @@ if __name__ == "__main__":
         transformations[2,1] = np.asarray(calibration["twop_to_dmd"])
     except:
         print("calibration couldn't be loaded, defaulting to identity")
+
+    image_store = ImageStore()
    
     app = QApplication(sys.argv)
 
     # Communication with ScanImage
     scan_image = ScanImage(PROTOCOL, HOST, PORT)
-    twop_sender = ImageSender(scan_image)
+    twop_sender = ImageSender(scan_image, image_store)
     thread_pool = QThreadPool()
     thread_pool.start(twop_sender)
 
@@ -71,9 +74,9 @@ if __name__ == "__main__":
     dmd_drawer = DrawPolyMask(np.zeros((DMD_HEIGHT,DMD_WIDTH)))
     twop_drawer = DrawPolyMask(np.zeros((512,512)))
 
-    cam_mask = DrawPolyMaskOpto(cam_drawer)
-    dmd_mask = DrawPolyMaskOptoDMD(dmd_drawer)
-    twop_mask = DrawPolyMaskOpto(twop_drawer)
+    cam_mask = DrawPolyMaskOpto(cam_drawer, image_store)
+    dmd_mask = DrawPolyMaskOptoDMD(dmd_drawer, image_store)
+    twop_mask = DrawPolyMaskOpto(twop_drawer, image_store)
 
     masks = MaskManager([cam_mask, dmd_mask, twop_mask], ["Camera", "DMD", "Two Photon"], transformations)
     masks.show()
