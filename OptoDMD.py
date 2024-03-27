@@ -57,7 +57,7 @@ if __name__ == "__main__":
 
     # Camera 
     cam = XimeaCamera(1)
-    camera_controls = CameraControl(cam)
+    camera_controls = CameraControl(cam, image_store.camera_image)
     camera_controls.show()
 
     # Control LEDs
@@ -67,26 +67,19 @@ if __name__ == "__main__":
     led_widget.show()
 
     # Control DMD
-    dmd_widget = DMD(screen_num=SCREEN_DMD)
+    dmd_widget = DMD(screen_num=SCREEN_DMD, image_store=image_store)
 
     # Masks
     cam_drawer = DrawPolyMask(np.zeros((512,512)))
     dmd_drawer = DrawPolyMask(np.zeros((DMD_HEIGHT,DMD_WIDTH)))
     twop_drawer = DrawPolyMask(np.zeros((512,512)))
 
-    cam_mask = DrawPolyMaskOpto(cam_drawer, image_store)
+    cam_mask = DrawPolyMaskOptoCam(cam_drawer, image_store)
     dmd_mask = DrawPolyMaskOptoDMD(dmd_drawer, image_store)
-    twop_mask = DrawPolyMaskOpto(twop_drawer, image_store)
+    twop_mask = DrawPolyMaskOptoTwoP(twop_drawer, image_store)
 
     masks = MaskManager([cam_mask, dmd_mask, twop_mask], ["Camera", "DMD", "Two Photon"], transformations)
     masks.show()
-
-    # connect signals and slots
-    dmd_mask.DMD_update.connect(dmd_widget.update_image)
-    masks.mask_expose.connect(dmd_mask.expose)
-    masks.clear_dmd.connect(dmd_mask.clear)
-    camera_controls.image_ready.connect(cam_mask.set_image)
-    twop_sender.scan_image.image_ready.connect(twop_mask.set_image)
 
     app.exec()
 

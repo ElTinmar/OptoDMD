@@ -12,6 +12,6 @@ dependencies:
 - opencv
 - pip:
   - git+https://github.com/ElTinmar/qt_widgets.git@main
-  - git+https://github.com/ElTinmar/camera_tools.git@main
+  - git+https://github.com/ElTinmar/camera_tools.git@image_store
   - git+https://github.com/ElTinmar/image_tools.git@main
   - git+https://github.com/ElTinmar/alignment_tools.git@main

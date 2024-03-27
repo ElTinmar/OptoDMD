@@ -5,16 +5,18 @@ from PyQt5.QtCore import pyqtSignal, pyqtSlot, QRunnable, QThreadPool, QObject
 from PyQt5.QtWidgets import QLabel,  QWidget
 from qt_widgets import NDarray_to_QPixmap
 from image_tools import im2uint8
+from camera_tools import BaseFrame, Frame
+from Communication import ImageStore
 
-def deserialize(message: str) -> NDArray:
+
+def deserialize(message: str) -> Frame:
     '''deserialize string into numpy array'''
 
-    data = [r.split(',') for r in message.split(';')]
-    return np.array(data, dtype = np.float32)
+    image_num, image_time, data = message.split('|')
+    image = [r.split(',') for r in data.split(';')]
+    return BaseFrame(int(image_num), float(image_time), np.array(image, dtype = np.float32))
 
 class ScanImage(QObject):
-
-    image_ready = pyqtSignal(np.ndarray)
 
     def __init__(self, protocol: str, host: str, port: int, *args, **kwargs) -> None:
 
@@ -27,49 +29,32 @@ class ScanImage(QObject):
         self.socket_image = self.context.socket(zmq.PULL)
         self.socket_image.connect(address_image)
     
-    def get_image(self) -> np.ndarray:
+    def get_frame(self) -> Frame:
+
         message = self.socket_image.recv()
-        image = deserialize(message.decode())
-        image = np.clip(image,0,1)
-        return image
+        frame = deserialize(message.decode())
+        return frame
 
 class ImageSender(QRunnable):
 
-    def __init__(self, scan_image: ScanImage, *args, **kwargs):
+    def __init__(self, scan_image: ScanImage, image_store: ImageStore, *args, **kwargs):
 
         super().__init__(*args, **kwargs)
         
+        self.image_store = image_store
         self.scan_image = scan_image
         self.keepgoing = True
+        self.shape = self.image.shape
     
     def stop(self):
         self.keepgoing = False
 
     def run(self):
         while self.keepgoing:
-            image = self.scan_image.get_image()
-            self.scan_image.image_ready.emit(image)
-
-class TwoPhoton(QWidget):
-
-    def __init__(self, sender: ImageSender, *args, **kwargs):
-
-        super().__init__(*args, **kwargs)
-
-        self.sender = sender
-        self.sender.scan_image.image_ready.connect(self.display)
-        self.thread_pool = QThreadPool()
-        self.thread_pool.start(sender)
-
-        self.twop_image = QLabel(self)
-        self.twop_image.setFixedWidth(512)
-        self.twop_image.setFixedHeight(512)
-
-    @pyqtSlot(np.ndarray)
-    def display(self, image: NDArray):
-        image = im2uint8(image)
-        self.twop_image.setPixmap(NDarray_to_QPixmap(image))
-        self.update()
-
-    def closeEvent(self, event):
-        self.sender.stop()
+            frame = self.scan_image.get_image()
+            image = frame.image
+            if image is not None:
+                if image.shape != self.shape:
+                    self.image_store.two_photon_image = image
+                else:
+                    self.image_store.two_photon_image[:] = image[:]

@@ -5,15 +5,22 @@ from numpy.typing import NDArray
 import numpy as np
 from qt_widgets import NDarray_to_QPixmap
 from image_tools import im2rgb, im2uint8
-
+from Communication import ImageStore
 class DMD(QWidget):
 
-    def __init__ (self, screen_num: int = 0, *args, **kwargs):
+    def __init__ (self, image_store: ImageStore, screen_num: int = 0, display_fps: int = 60, *args, **kwargs):
 
         super().__init__(*args, **kwargs)
         self.screen_num = screen_num
+        self.image_store = image_store
+        self.display_fps = display_fps
         self.configure_screen()
         self.create_components()
+
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.update_image)
+        self.timer.setInterval(int(1000/display_fps))
+        self.timer.start()
 
     def configure_screen(self):
         
@@ -38,9 +45,8 @@ class DMD(QWidget):
         self.img_label.setGeometry(0, 0, self.screen_width, self.screen_height)           
         self.img_label.show()
 
-    @pyqtSlot(np.ndarray)
-    def update_image(self, image: NDArray=None):
-        image = im2rgb(im2uint8(image))
+    def update_image(self):
+        image = im2rgb(im2uint8(self.image_store.dmd_image))
         self.img_label.setPixmap(NDarray_to_QPixmap(image))     
 
 class ImageSender(QWidget):
