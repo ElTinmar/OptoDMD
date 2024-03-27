@@ -1,4 +1,4 @@
-name: OptoDMD
+name: OptoDMD_rb
 channels:
 - conda-forge
 dependencies:
