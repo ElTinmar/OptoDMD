@@ -60,6 +60,15 @@ if __name__ == "__main__":
         dmd_widget = DMD(screen_num=SCREEN_DMD)
         dmd_widget.update_image(pattern)
 
+        print("""
+        Put a mirror under the microscope.
+        Make sure to:
+            - Lower the objective until the pattern is in focus
+            - Turn off PMT
+            - Switch dichroic to WF position
+            - Turn on LED
+        """)
+
         # get image from camera 
         cam = XimeaCamera(XIMEA_INDEX)
         controls = CameraControl(cam)
@@ -100,6 +109,11 @@ if __name__ == "__main__":
         Put a slide with some structure under the microscope
         and take an epifluorescence image with the camera.
         The slide should be very thin and (auto-)fluorescent.
+        Make sure to:
+            - Lower the objective until the sample is in focus
+            - Turn off PMT
+            - Switch dichroic to WF position
+            - Turn on LED
         """)
 
         # use the DMD to expose the image
@@ -118,6 +132,13 @@ if __name__ == "__main__":
         cam.stop_acquisition()
         dmd_widget.close()
         preview.close()
+
+        print("""
+        Make sure to:
+            - Turn off LED
+            - Switch dichroic to 2P position
+            - Turn on PMT
+        """)
 
         # get image from scanimage 
         scan_image = ScanImage(PROTOCOL, HOST, PORT)
