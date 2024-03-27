@@ -63,10 +63,10 @@ if __name__ == "__main__":
         print("""
         Put a mirror under the microscope.
         Make sure to:
-            - Lower the objective until the pattern is in focus
             - Turn off PMT
             - Switch dichroic to WF position
             - Turn on LED
+            - Lower the objective until the pattern is in focus
         """)
 
         # get image from camera 
@@ -110,10 +110,10 @@ if __name__ == "__main__":
         and take an epifluorescence image with the camera.
         The slide should be very thin and (auto-)fluorescent.
         Make sure to:
-            - Lower the objective until the sample is in focus
             - Turn off PMT
             - Switch dichroic to WF position
             - Turn on LED
+            - Lower the objective until the sample is in focus
         """)
 
         # use the DMD to expose the image
