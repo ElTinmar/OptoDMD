@@ -383,7 +383,6 @@ class MaskManager(QWidget):
         self.clear_dmd_button.setText('clear DMD')
         self.clear_dmd_button.clicked.connect(self.clear_dmd)
 
-
     def layout_components(self):
 
         mask_buttons_layout = QHBoxLayout()
