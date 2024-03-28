@@ -365,7 +365,7 @@ class MaskManager(QWidget):
 
             for idx2, drawer2 in enumerate(self.mask_drawers):
                 height, width = drawer2.get_image().shape[:2]
-                coords = self.transformations[idx2,idx,:,:] @ np.array([[0,0,1],[0,width,1],[height,width,1],[height,0,1],[0,0,1]]).T
+                coords = self.transformations[idx2,idx,:,:] @ np.array([[0,0,1],[width,0,1],[width,height,1],[0,height,1],[0,0,1]]).T
                 color = self.colors[idx2]
                 drawer.registered_spaces.append((QPen(color), coords[:2,:].T))
 
