@@ -13,22 +13,26 @@ import json
 
 if __name__ == "__main__":
 
-    # zmq settings
-    PROTOCOL = "tcp://"
-    HOST = "o1-317"
-    PORT = 5555
-    
     # dmd settings
     SCREEN_DMD = 1
     DMD_HEIGHT = 1140
     DMD_WIDTH = 912
 
     # labjack settings
-    USE_LABJACK = True # Only set to False for testing purposes on a machine without a labjack
+    USE_LABJACK = False # Only set to False for testing purposes on a machine without a labjack
     PWM_CHANNEL = 6
 
     # camera settings
-    XIMEA_CAMERA_ID = 1 # Only set to None for testing purposes on a machine without a Ximea camera
+    XIMEA_CAMERA_ID = None # Only set to None for testing purposes on a machine without a Ximea camera
+    CAM_HEIGHT = 2048
+    CAM_WIDTH = 2048
+
+    # microscope settings
+    PROTOCOL = "tcp://"
+    HOST = "o1-317"
+    PORT = 5555
+    TWOP_HEIGHT = 512
+    TWOP_WIDTH = 512
 
     # calibration file
     transformations = np.tile(np.eye(3), (3,3,1,1))
@@ -55,10 +59,16 @@ if __name__ == "__main__":
     if XIMEA_CAMERA_ID:
         from camera_tools import XimeaCamera
         cam = XimeaCamera(XIMEA_CAMERA_ID)
+        cam.set_height(CAM_HEIGHT)
+        cam.set_width(CAM_WIDTH)
     else:
         cam = OpenCV_Webcam(-1)
 
     camera_controls = CameraControl(cam)
+    camera_controls.height_spinbox.setDisabled(True)
+    camera_controls.width_spinbox.setDisabled(True)
+    camera_controls.offsetX_spinbox.setDisabled(True)
+    camera_controls.offsetY_spinbox.setDisabled(True)
     camera_controls.show()
 
     # Control LEDs
@@ -72,9 +82,9 @@ if __name__ == "__main__":
     dmd_widget = DMD(screen_num=SCREEN_DMD)
 
     # Masks
-    cam_drawer = DrawPolyMask(np.zeros((512,512)))
+    cam_drawer = DrawPolyMask(np.zeros((CAM_HEIGHT,CAM_WIDTH)))
     dmd_drawer = DrawPolyMask(np.zeros((DMD_HEIGHT,DMD_WIDTH)))
-    twop_drawer = DrawPolyMask(np.zeros((512,512)))
+    twop_drawer = DrawPolyMask(np.zeros((TWOP_HEIGHT,TWOP_WIDTH)))
 
     cam_mask = DrawPolyMaskOptoCam(cam_drawer, camera_controls)
     dmd_mask = DrawPolyMaskOptoDMD(dmd_drawer)

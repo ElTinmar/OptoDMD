@@ -1,5 +1,6 @@
 import cv2
-from PyQt5.QtCore import pyqtSignal, Qt, QThreadPool, QTimer
+from PyQt5.QtCore import pyqtSignal, Qt, QThreadPool, QTimer, QPointF
+from PyQt5.QtGui import QPainter, QPen
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QTabWidget, QScrollArea, QPushButton, QFrame, QLineEdit, QCheckBox
 import numpy as np
 from numpy.typing import NDArray
@@ -21,6 +22,7 @@ class DrawPolyMaskOpto(QWidget):
     
         super().__init__(*args, **kwargs)
 
+        self.registered_spaces = []
         self.drawer = drawer
         self.drawer.mask_drawn.connect(self.mask_drawn)
         self.create_components()
@@ -36,7 +38,7 @@ class DrawPolyMaskOpto(QWidget):
         return self.drawer.get_masks()
     
     def set_masks(self, masks: dict):
-        return self.drawer.set_masks(masks)
+        self.drawer.set_masks(masks)
 
     def get_image(self):
         return self.drawer.get_image()
@@ -46,6 +48,16 @@ class DrawPolyMaskOpto(QWidget):
 
     def update_pixmap(self):
         self.drawer.update_pixmap()
+        if self.show_spaces.isChecked():
+            pixmap = self.drawer.pixmap_item.pixmap()
+            painter = QPainter(pixmap)
+            for pen, coords in self.registered_spaces:
+                coords = coords.astype(np.int32)
+                painter.setPen(pen)
+                for p1, p2 in zip(coords[:-1], coords[1:]):
+                    painter.drawLine(p1[0],p1[1],p2[0],p2[1])
+            painter.end()
+            self.drawer.pixmap_item.setPixmap(pixmap)
 
     def get_image_size(self):
         return self.drawer.get_image_size()
@@ -61,11 +73,16 @@ class DrawPolyMaskOpto(QWidget):
         self.whole_field.setText('whole field')
         self.whole_field.clicked.connect(self.create_whole_field)
 
+        self.show_spaces = QCheckBox(self)
+        self.show_spaces.setText('show outlines')
+        self.show_spaces.stateChanged.connect(self.update_pixmap)
+
     def layout_components(self):
 
         draw_buttons_layout = QHBoxLayout()
         draw_buttons_layout.addWidget(self.checkerboard)
         draw_buttons_layout.addWidget(self.whole_field)
+        draw_buttons_layout.addWidget(self.show_spaces)
         draw_buttons_layout.addStretch()
 
         layout = QVBoxLayout(self)
@@ -172,9 +189,6 @@ class DrawPolyMaskOptoDMD(DrawPolyMaskOpto):
     '''
 
     DMD_update = pyqtSignal(np.ndarray)
-
-    def update_pixmap(self):
-        super().update_pixmap()
 
     def expose(self, key: int):
         masks = self.get_masks()
@@ -329,6 +343,7 @@ class MaskManager(QWidget):
         self.create_components()
         self.layout_components()
 
+        pens = [QPen(Qt.red), QPen(Qt.cyan), QPen(Qt.green)]
         for idx, drawer in enumerate(self.mask_drawers):
             drawer.set_ID(idx)
             drawer.mask_drawn.connect(self.on_mask_receive)
@@ -338,6 +353,11 @@ class MaskManager(QWidget):
             self.mask_visibility.connect(drawer.on_mask_visibility)
             self.flatten_mask.connect(drawer.on_mask_flatten)
             self.clear_mask.connect(drawer.on_mask_clear)
+
+            for idx2, drawer2 in enumerate(self.mask_drawers):
+                height, width = drawer2.get_image().shape[:2]
+                coords = self.transformations[idx2,idx,:,:] @ np.array([[0,0,1],[0,width,1],[height,width,1],[height,0,1],[0,0,1]]).T
+                drawer.registered_spaces.append((pens[idx2], coords[:2,:].T))
 
     def create_components(self):
 
