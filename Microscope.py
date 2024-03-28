@@ -34,6 +34,7 @@ class ScanImage(QObject):
         address_image = protocol + host + ":" + str(port)
         self.socket_image = self.context.socket(zmq.PULL)
         self.socket_image.connect(address_image)
+        self.socket_image.setsockopt(zmq.RCVTIMEO, 1000)
     
     def update_buffer(self) -> None:
         self.buffer = FrameRingBuffer(
@@ -48,23 +49,27 @@ class ScanImage(QObject):
 
     def get_frame(self) -> Frame:
 
-        # get image over ZMQ socket
-        message = self.socket_image.recv()
-        frame = deserialize(message.decode())
+        try:
+            # get image over ZMQ socket
+            message = self.socket_image.recv()
+            frame = deserialize(message.decode())
 
-        # update buffer if anything changed
-        if frame.image.shape != self.shape:
-            self.shape = frame.image.shape
-            self.update_buffer()
+            # update buffer if anything changed
+            if frame.image.shape != self.shape:
+                self.shape = frame.image.shape
+                self.update_buffer()
 
-        # put image on the ring buffer
-        self.buffer.put(frame)
+            # put image on the ring buffer
+            self.buffer.put(frame)
 
-        # emit signal
-        self.frame_received.emit()
+            # emit signal
+            self.frame_received.emit()
 
-        # return frame
-        return frame
+            # return frame
+            return frame
+        
+        except zmq.error.Again:
+            pass
 
 class TwoPReceiver(QRunnable):
 
@@ -81,6 +86,6 @@ class TwoPReceiver(QRunnable):
     def run(self):
         while self.keepgoing:
             self.scan_image.get_frame()
-            
+
 
 
