@@ -70,7 +70,6 @@ if __name__ == "__main__":
     camera_controls.width_spinbox.setDisabled(True)
     camera_controls.offsetX_spinbox.setDisabled(True)
     camera_controls.offsetY_spinbox.setDisabled(True)
-
     camera_controls.show()
 
     # Control LEDs
