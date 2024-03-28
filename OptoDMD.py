@@ -24,8 +24,8 @@ if __name__ == "__main__":
 
     # camera settings
     XIMEA_CAMERA_ID = None # Only set to None for testing purposes on a machine without a Ximea camera
-    CAM_HEIGHT = 640    
-    CAM_WIDTH = 480
+    CAM_HEIGHT = 480    
+    CAM_WIDTH = 640
 
     # microscope settings
     PROTOCOL = "tcp://"
