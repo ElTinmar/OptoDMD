@@ -24,8 +24,8 @@ if __name__ == "__main__":
 
     # camera settings
     XIMEA_CAMERA_ID = None # Only set to None for testing purposes on a machine without a Ximea camera
-    CAM_HEIGHT = 2048
-    CAM_WIDTH = 2048
+    CAM_HEIGHT = 640    
+    CAM_WIDTH = 480
 
     # microscope settings
     PROTOCOL = "tcp://"
@@ -87,14 +87,13 @@ if __name__ == "__main__":
     twop_drawer = DrawPolyMask(np.zeros((TWOP_HEIGHT,TWOP_WIDTH)))
 
     cam_mask = DrawPolyMaskOptoCam(cam_drawer, camera_controls)
-    dmd_mask = DrawPolyMaskOptoDMD(dmd_drawer)
+    dmd_mask = DrawPolyMaskOptoDMD(dmd_drawer, dmd_widget)
     twop_mask = DrawPolyMaskOpto2P(twop_drawer, scan_image)
 
     masks = MaskManager([cam_mask, dmd_mask, twop_mask], ["Camera", "DMD", "Two Photon"], transformations)
     masks.show()
 
     # connect signals and slots
-    dmd_mask.DMD_update.connect(dmd_widget.update_image)
     masks.mask_expose.connect(dmd_mask.expose)
     masks.clear_dmd.connect(dmd_mask.clear)
 

@@ -9,6 +9,7 @@ from image_tools import DrawPolyMask
 from camera_tools import CameraControl
 from Microscope import TwoPReceiver, ScanImage
 from queue import Empty
+from DMD import DMD
 
 class DrawPolyMaskOpto(QWidget):
     """
@@ -189,16 +190,23 @@ class DrawPolyMaskOptoDMD(DrawPolyMaskOpto):
     Derived class that emits the collection of visible masks 
     '''
 
-    DMD_update = pyqtSignal(np.ndarray)
+    def __init__(self, drawer: DrawPolyMask, dmd_widget: DMD, *args, **kwargs):
+
+        super().__init__(drawer, *args, **kwargs)
+
+        self.dmd_widget = dmd_widget
 
     def expose(self, key: int):
         masks = self.get_masks()
         visible, mask = masks[key]
-        self.DMD_update.emit(mask)
+        self.dmd_widget.update_image(mask)
         
     def clear(self):
         black = np.zeros(self.get_image_size(), np.uint8)
-        self.DMD_update.emit(black)
+        self.dmd_widget.update_image(black)
+
+    def closeEvent(self, event):
+        self.dmd_widget.close() 
 
 class DrawPolyMaskOptoCam(DrawPolyMaskOpto):
 
@@ -481,3 +489,6 @@ class MaskManager(QWidget):
             self.frame_layout.insertWidget(self.frame_layout.count()-1, widget)
             self.mask_widgets[1] = widget
 
+    def closeEvent(self, event):
+        for drawer in self.mask_drawers:
+            drawer.close()
