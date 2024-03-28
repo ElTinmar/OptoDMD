@@ -1,5 +1,5 @@
 import cv2
-from PyQt5.QtCore import pyqtSignal, Qt, QThreadPool, QTimer, QPointF
+from PyQt5.QtCore import pyqtSignal, Qt, QThreadPool, QTimer
 from PyQt5.QtGui import QPainter, QPen
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QTabWidget, QScrollArea, QPushButton, QFrame, QLineEdit, QCheckBox
 import numpy as np
@@ -45,6 +45,7 @@ class DrawPolyMaskOpto(QWidget):
 
     def set_image(self, image: np.ndarray):
         self.drawer.set_image(image)
+        self.update_pixmap()
 
     def update_pixmap(self):
         self.drawer.update_pixmap()
