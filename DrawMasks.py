@@ -336,6 +336,7 @@ class MaskManager(QWidget):
         if not np.all(transformations.shape == np.array([N,N,3,3])):
             raise ValueError(f"transformations should be a {[N,N,3,3]} array")
 
+        self.colors = [Qt.red, Qt.cyan, Qt.green]
         self.mask_widgets = {} 
         self.mask_drawers = mask_drawers
         self.mask_drawer_names = mask_drawer_names
@@ -343,7 +344,6 @@ class MaskManager(QWidget):
         self.create_components()
         self.layout_components()
 
-        pens = [QPen(Qt.red), QPen(Qt.cyan), QPen(Qt.green)]
         for idx, drawer in enumerate(self.mask_drawers):
             drawer.set_ID(idx)
             drawer.mask_drawn.connect(self.on_mask_receive)
@@ -357,7 +357,8 @@ class MaskManager(QWidget):
             for idx2, drawer2 in enumerate(self.mask_drawers):
                 height, width = drawer2.get_image().shape[:2]
                 coords = self.transformations[idx2,idx,:,:] @ np.array([[0,0,1],[0,width,1],[height,width,1],[height,0,1],[0,0,1]]).T
-                drawer.registered_spaces.append((pens[idx2], coords[:2,:].T))
+                color = self.colors[idx2]
+                drawer.registered_spaces.append((QPen(color), coords[:2,:].T))
 
     def create_components(self):
 
@@ -401,7 +402,9 @@ class MaskManager(QWidget):
 
         tabs = QTabWidget()
         for drawer, name in zip(self.mask_drawers, self.mask_drawer_names):
-            tabs.addTab(drawer, name)
+            idx = tabs.addTab(drawer, name)
+            tab_bar = tabs.tabBar()
+            tab_bar.setTabTextColor(idx, self.colors[idx])
 
         layout = QHBoxLayout(self)
         layout.addWidget(tabs)
