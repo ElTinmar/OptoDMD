@@ -24,7 +24,7 @@ if __name__ == "__main__":
 
     # camera settings
     XIMEA_CAMERA_ID = None # Only set to None for testing purposes on a machine without a Ximea camera
-    WEBCAM_INDEX = -1
+    WEBCAM_INDEX = 4
     CAM_HEIGHT = 2048    
     CAM_WIDTH = 2048
 

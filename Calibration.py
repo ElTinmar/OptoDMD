@@ -1,6 +1,6 @@
 from Microscope import ScanImage
 from DMD import DMD
-from camera_tools import CameraControl, CameraPreview
+from camera_tools import CameraControl, CameraPreview, OpenCV_Webcam
 from PyQt5.QtWidgets import QApplication
 from alignment_tools import AlignAffine2D
 import sys
@@ -40,7 +40,7 @@ if __name__ == "__main__":
     DMD_HEIGHT = 1140
     DMD_WIDTH = 912
     XIMEA_INDEX = None # Only set to None for testing purposes on a machine without a Ximea camera
-    WEBCAM_INDEX = -1
+    WEBCAM_INDEX = 4
 
     I = np.eye(3)
     dmd_to_cam = I
@@ -71,7 +71,7 @@ if __name__ == "__main__":
         """)
 
         # get image from camera
-        if XIMEA_CAMERA_ID:
+        if XIMEA_INDEX:
             from camera_tools import XimeaCamera
             cam = XimeaCamera(XIMEA_INDEX)
         else:
@@ -129,7 +129,7 @@ if __name__ == "__main__":
         dmd_widget.update_image(255*np.ones((DMD_HEIGHT,DMD_WIDTH,3), np.uint8))
         
         # get image from camera
-        if XIMEA_CAMERA_ID:
+        if XIMEA_INDEX:
             from camera_tools import XimeaCamera
             cam = XimeaCamera(XIMEA_INDEX)
         else:
