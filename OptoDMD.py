@@ -19,11 +19,12 @@ if __name__ == "__main__":
     DMD_WIDTH = 912
 
     # labjack settings
-    USE_LABJACK = True # Only set to False for testing purposes on a machine without a labjack
+    USE_LABJACK = False # Only set to False for testing purposes on a machine without a labjack
     PWM_CHANNEL = 6
 
     # camera settings
-    XIMEA_CAMERA_ID = 1 # Only set to None for testing purposes on a machine without a Ximea camera
+    XIMEA_CAMERA_ID = None # Only set to None for testing purposes on a machine without a Ximea camera
+    WEBCAM_INDEX = -1
     CAM_HEIGHT = 2048    
     CAM_WIDTH = 2048
 
@@ -62,7 +63,7 @@ if __name__ == "__main__":
         cam.set_height(CAM_HEIGHT)
         cam.set_width(CAM_WIDTH)
     else:
-        cam = OpenCV_Webcam(-1)
+        cam = OpenCV_Webcam(WEBCAM_INDEX)
 
     camera_controls = CameraControl(cam)
     # disable ROI controls 

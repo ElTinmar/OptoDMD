@@ -1,6 +1,6 @@
 from Microscope import ScanImage
 from DMD import DMD
-from camera_tools import XimeaCamera, CameraControl, CameraPreview
+from camera_tools import CameraControl, CameraPreview
 from PyQt5.QtWidgets import QApplication
 from alignment_tools import AlignAffine2D
 import sys
@@ -39,7 +39,8 @@ if __name__ == "__main__":
     SCREEN_DMD = 1
     DMD_HEIGHT = 1140
     DMD_WIDTH = 912
-    XIMEA_INDEX = 1
+    XIMEA_INDEX = None # Only set to None for testing purposes on a machine without a Ximea camera
+    WEBCAM_INDEX = -1
 
     I = np.eye(3)
     dmd_to_cam = I
@@ -69,8 +70,13 @@ if __name__ == "__main__":
             - Lower the objective until the pattern is in focus
         """)
 
-        # get image from camera 
-        cam = XimeaCamera(XIMEA_INDEX)
+        # get image from camera
+        if XIMEA_CAMERA_ID:
+            from camera_tools import XimeaCamera
+            cam = XimeaCamera(XIMEA_INDEX)
+        else:
+            cam = OpenCV_Webcam(WEBCAM_INDEX)
+
         controls = CameraControl(cam)
         preview = CameraPreview(controls)
         preview.show()
@@ -123,7 +129,12 @@ if __name__ == "__main__":
         dmd_widget.update_image(255*np.ones((DMD_HEIGHT,DMD_WIDTH,3), np.uint8))
         
         # get image from camera
-        cam = XimeaCamera(XIMEA_INDEX)
+        if XIMEA_CAMERA_ID:
+            from camera_tools import XimeaCamera
+            cam = XimeaCamera(XIMEA_INDEX)
+        else:
+            cam = OpenCV_Webcam(WEBCAM_INDEX)
+
         controls = CameraControl(cam)
         preview = CameraPreview(controls)
         preview.show()
