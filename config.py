@@ -1,0 +1,14 @@
+SCREEN_DMD = 1
+DMD_HEIGHT = 1200
+DMD_WIDTH = 1920
+USE_LABJACK = False # Only set to False for testing purposes on a machine without a labjack
+PWM_CHANNEL = 6
+XIMEA_INDEX = None # Only set to None for testing purposes on a machine without a Ximea camera
+WEBCAM_INDEX = 4
+CAM_HEIGHT = 2048    
+CAM_WIDTH = 2048
+PROTOCOL = "tcp://"
+HOST = "o1-317"
+PORT = 5555
+TWOP_HEIGHT = 480
+TWOP_WIDTH = 640

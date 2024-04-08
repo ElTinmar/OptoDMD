@@ -9,6 +9,7 @@ from numpy.typing import NDArray
 import cv2
 from image_tools import regular_polygon, star
 import json
+from config import *
 
 def create_calibration_pattern(div: int, height: int, width: int) -> NDArray:
     
@@ -36,11 +37,6 @@ if __name__ == "__main__":
 
     CALIBRATE_CAMERA = True
     CALIBRATE_TWOPHOTON = False
-    SCREEN_DMD = 1
-    DMD_HEIGHT = 1140
-    DMD_WIDTH = 912
-    XIMEA_INDEX = None # Only set to None for testing purposes on a machine without a Ximea camera
-    WEBCAM_INDEX = 4
 
     I = np.eye(3)
     dmd_to_cam = I
@@ -107,11 +103,6 @@ if __name__ == "__main__":
     if CALIBRATE_TWOPHOTON:
     
         app = QApplication(sys.argv)
-    
-        # communicate with scanimage
-        PROTOCOL = "tcp://"
-        HOST = "o1-317"
-        PORT = 5555
 
         print("""
         Put a slide with some structure under the microscope

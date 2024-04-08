@@ -5,6 +5,7 @@ from LED import LEDD1B, LEDWidget
 from DMD import DMD
 from camera_tools import CameraControl, OpenCV_Webcam
 from PyQt5.QtWidgets import QApplication
+from config import *
 
 import sys
 import numpy as np
@@ -12,28 +13,6 @@ from image_tools import DrawPolyMask
 import json
 
 if __name__ == "__main__":
-
-    # dmd settings
-    SCREEN_DMD = 1
-    DMD_HEIGHT = 1140
-    DMD_WIDTH = 912
-
-    # labjack settings
-    USE_LABJACK = False # Only set to False for testing purposes on a machine without a labjack
-    PWM_CHANNEL = 6
-
-    # camera settings
-    XIMEA_CAMERA_ID = None # Only set to None for testing purposes on a machine without a Ximea camera
-    WEBCAM_INDEX = 4
-    CAM_HEIGHT = 2048    
-    CAM_WIDTH = 2048
-
-    # microscope settings
-    PROTOCOL = "tcp://"
-    HOST = "o1-317"
-    PORT = 5555
-    TWOP_HEIGHT = 512
-    TWOP_WIDTH = 512
 
     # calibration file
     transformations = np.tile(np.eye(3), (3,3,1,1))
@@ -57,9 +36,9 @@ if __name__ == "__main__":
     scan_image = ScanImage(PROTOCOL, HOST, PORT)
 
     # Camera 
-    if XIMEA_CAMERA_ID:
+    if XIMEA_INDEX:
         from camera_tools import XimeaCamera
-        cam = XimeaCamera(XIMEA_CAMERA_ID)
+        cam = XimeaCamera(XIMEA_INDEX)
         cam.set_height(CAM_HEIGHT)
         cam.set_width(CAM_WIDTH)
     else:
