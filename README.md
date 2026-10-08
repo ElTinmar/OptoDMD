@@ -2,6 +2,10 @@
 
 Control DMD device for patterned 1P optogenetics stimulation
 
+![setup_picture](resources/2P_setup.png)
+![setup_schematic](resources/schematic_DMD.png)
+
+
 # Requirements
 
 - a modified DLP projector (replace lamp/LEDs by controllable high-power LEDs)
